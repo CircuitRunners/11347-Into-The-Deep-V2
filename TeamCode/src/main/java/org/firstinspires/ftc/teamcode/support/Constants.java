@@ -15,6 +15,8 @@ public class Constants {
     public static final String RETRACTION_ONE = "leftRetraction";
     public static final String RETRACTION_TWO = "rightRetraction";
 
-
+    // Drivebase Constants
+    public static double pinpointXOffset = 0.0;
+    public static double pinpointYOffset = 0.0;
     
 }

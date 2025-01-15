@@ -1,20 +1,21 @@
-package org.firstinspires.ftc.teamcode.Subsystems;
+package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.arcrobotics.ftclib.command.SubsystemBase;
-import org.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.AnalogInput;
+import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrnetUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
 
 import org.firstinspires.ftc.teamcode.support.RunAction;
-import org.firstinspires.ftc.teamcode.support.Constants;
+import static org.firstinspires.ftc.teamcode.support.Constants.*;
 
-public class Arm extends SubSystemBase {
+@Config
+public class Arm extends SubsystemBase {
     public enum ArmRotations {
         REST(5),
         MID(100);
@@ -36,7 +37,7 @@ public class Arm extends SubSystemBase {
     public double p = kP, i = kI, d = kD;
     public double f = kF;
 
-    public static int rotationTarget = targetRotation;
+    public double rotationTarget = targetRotation;
 
     private AnalogInput encoder;
 
@@ -46,14 +47,14 @@ public class Arm extends SubSystemBase {
 
     public RunAction testDown, testUp;
 
-    public Arm(HardwareMap hw) {
+    public Arm(HardwareMap hardwareMap) {
         controller = new PIDController(p, i, d);
 
         rotationOne = hardwareMap.get(DcMotorEx.class, ROTATION_ONE);
         rotationTwo = hardwareMap.get(DcMotorEx.class, ROTATION_TWO);
 
         retractOne = hardwareMap.get(DcMotorEx.class, RETRACTION_ONE);
-        retratctTwo = hardwareMap.get(DcMotorEx.class, RETRACTION_TWO);
+        retractTwo = hardwareMap.get(DcMotorEx.class, RETRACTION_TWO);
 
         encoder = hardwareMap.get(AnalogInput.class, "rotationEnc");
 
@@ -80,7 +81,7 @@ public class Arm extends SubSystemBase {
     }
 
     public int getCurrentRotation() {
-        return rotationOne.getCurrentPosition;
+        return rotationOne.getCurrentPosition();
         // return (encoder.getVoltage() / 3.2 * 360) % 360;
     }
 
@@ -97,7 +98,7 @@ public class Arm extends SubSystemBase {
     }
 
     public void manual(double n) {
-        setRotationTarget(target + n * ARM_SPEED);
+        setRotationTarget(rotationTarget + n * ARM_SPEED);
     }
 
     public void testDown() {
@@ -111,22 +112,22 @@ public class Arm extends SubSystemBase {
     public void resetEncoders() {
         rotationOne.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rotationTwo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        retractionOne.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        retractionTwo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        retractOne.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        retractTwo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
         rotationOne.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         rotationTwo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        retractionOne.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        retractionTwo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        retractOne.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        retractTwo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public void resetRotationPosition() {
-        setArmTarget(0);
+        setRotationTarget(0);
         rotationOne.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rotationTwo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
-        retractionOne.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        retractionTwo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rotationOne.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        rotationTwo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
     public double getRotationVelocity() {
@@ -143,8 +144,16 @@ public class Arm extends SubSystemBase {
     }
 
     public void setRetractionPower(double power) {
-        retractionOne.setPower(power);
-        retractionTwo.setPower(power);
+        retractOne.setPower(power);
+        retractTwo.setPower(power);
+    }
+
+    public void setAllPower(double power) {
+        rotationOne.setPower(power);
+        rotationTwo.setPower(power);
+
+        retractOne.setPower(power);
+        retractTwo.setPower(power);
     }
 
     public void brake() {

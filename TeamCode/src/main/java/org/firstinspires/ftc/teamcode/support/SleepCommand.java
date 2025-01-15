@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.support;
 
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
-import org.firstinspires.ftc.teamcode.util.Action;
+import org.firstinspires.ftc.teamcode.support.Action;
 
 public class SleepCommand implements Action {
     private final double dt;
