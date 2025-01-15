@@ -2,9 +2,9 @@ package org.firstinspires.ftc.teamcode.teleOp;
 
 import static org.firstinspires.ftc.teamcode.support.Constants.*;
 
+import com.arcrobotics.ftclib.command.CommandOpMode;
 import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -17,7 +17,7 @@ import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 import org.firstinspires.ftc.robotcontroller.internal.GoBildaPinpointDriver;
 
 @TeleOp(name = "Teleop", group = "Teleop")
-public class Teleop extends OpMode {
+public class Teleop extends CommandOpMode {
 
     // Hardware references
     private MecanumDrive drive;
@@ -28,7 +28,7 @@ public class Teleop extends OpMode {
     private Gamepad previousGamepad1 = new Gamepad();
 
     @Override
-    public void init() {
+    public void initialize() {
         // Set up bulk caching
         List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
         for (LynxModule hub : allHubs) {
@@ -51,7 +51,7 @@ public class Teleop extends OpMode {
 
 
     @Override
-    public void loop() {
+    public void run() {
         previousGamepad1.copy(currentGamepad1);
         currentGamepad1.copy(gamepad1);
 
