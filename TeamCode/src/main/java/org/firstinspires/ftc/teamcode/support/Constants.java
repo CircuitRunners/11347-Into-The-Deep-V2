@@ -8,7 +8,9 @@ public class Constants {
     public static double kP = 0.0, kI = 0, kD = 0.0, kF = 0.0;
     public static double armStart = 0.0;
     public static double targetRotation = 0.0;
+    public static double targetRetraction = 0.0;
     public static double ARM_SPEED = 5;
+    public static double RETRACT_SPEED = 5;
     
     public static final String ROTATION_ONE = "backArmRotation";
     public static final String ROTATION_TWO = "frontArmRotation";
