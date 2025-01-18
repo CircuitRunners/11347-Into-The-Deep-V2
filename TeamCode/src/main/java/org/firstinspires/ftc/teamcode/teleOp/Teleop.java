@@ -47,9 +47,6 @@ public class Teleop extends CommandOpMode {
         telemetry.update();
     }
 
-
-
-
     @Override
     public void run() {
         previousGamepad1.copy(currentGamepad1);
@@ -87,8 +84,8 @@ public class Teleop extends CommandOpMode {
         pinpoint.setOffsets(pinpointXOffset, pinpointYOffset);
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
         pinpoint.setEncoderDirections(
-                GoBildaPinpointDriver.EncoderDirection.FORWARD,
-                GoBildaPinpointDriver.EncoderDirection.REVERSED
+                GoBildaPinpointDriver.EncoderDirection.REVERSED,
+                GoBildaPinpointDriver.EncoderDirection.FORWARD
         );
         pinpoint.resetPosAndIMU();
     }

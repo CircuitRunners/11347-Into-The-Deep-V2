@@ -11,9 +11,8 @@ public class MecanumDrive {
     private DcMotorEx frontRightMotor;
     private DcMotorEx backLeftMotor;
     private DcMotorEx backRightMotor;
-    private DcMotorEx[] motors;
 
-    public MecanumDrive(HardwareMap hardwareMap) {
+    public void init(HardwareMap hardwareMap) {
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "fl");
         frontRightMotor = hardwareMap.get(DcMotorEx.class, "fr");
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "bl");
@@ -22,9 +21,9 @@ public class MecanumDrive {
         frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        motors = new DcMotorEx[] {
-            frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor
-            };
+        DcMotorEx[] motors = new DcMotorEx[]{
+                frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor
+        };
 
         for (DcMotorEx motor : motors) {
             motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);

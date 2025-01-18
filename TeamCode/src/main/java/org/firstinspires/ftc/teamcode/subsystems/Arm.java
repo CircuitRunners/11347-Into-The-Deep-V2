@@ -1,25 +1,28 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.arcrobotics.ftclib.controller.PIDController;
+import com.acmerobotics.roadrunner.ftc.Encoder;
 import com.arcrobotics.ftclib.command.SubsystemBase;
+import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-import org.firstinspires.ftc.robotcore.external.navigation.CurrentUnit;
+import com.acmerobotics.roadrunner.ftc.RawEncoder;
+import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 
-import org.firstinspires.ftc.teamcode.support.Encoder;
 import org.firstinspires.ftc.teamcode.support.RunAction;
 import static org.firstinspires.ftc.teamcode.support.Constants.*;
 
 @Config
 public class Arm extends SubsystemBase {
+
     public enum ArmRotations {
         REST(5),
-        MID(100);
+        MID(100),
+        MAX(8800);
 
         public int position;
 
@@ -32,114 +35,109 @@ public class Arm extends SubsystemBase {
         }
     }
 
+    public enum ArmRetractions {
+        REST(-300),
+        MID(-100),
+        MAX(-56800);
+
+        public int position;
+
+        ArmRetractions(int position) {
+            this.position = position;
+        }
+
+        public int getPosition() {
+            return this.position;
+        }
+    }
+
     public DcMotorEx rotationOne, rotationTwo, retractOne, retractTwo;
+    private PIDController RotationController, RetractionController;
 
-    private PIDController controller;
-    public double p = kP, i = kI, d = kD;
-    public double f = kF;
+    public double ROTp = ROTkP, ROTi = ROTkI, ROTd = ROTkD;
+    public double RETp = RETkP, RETi = RETkI, RETd = RETkD;
+    public double ROTf = ROTkF;
+    public double RETf = RETkF;
 
-    public double rotationTarget = targetRotation;
-    public double retractionTarget = targetRetraction;
-
-    private Encoder rotEnc, retEnc;
+    public int rotationTarget = targetRotation;
+    public int retractionTarget = targetRetraction;
 
     private VoltageSensor voltageSensor;
     private double voltageComp;
-    private double VOLTAGE_WHEN_TUNED = 13.0;
+    private static final double VOLTAGE_WHEN_TUNED = 13.0;
 
     public RunAction testDown, testUp;
 
     public Arm(HardwareMap hardwareMap) {
-        controller = new PIDController(p, i, d);
+        RotationController = new PIDController(ROTp, ROTi, ROTd);
+        RetractionController = new PIDController(RETp, RETi, RETd);
 
+        // Initialize motors
         rotationOne = hardwareMap.get(DcMotorEx.class, ROTATION_ONE);
         rotationTwo = hardwareMap.get(DcMotorEx.class, ROTATION_TWO);
         retractOne = hardwareMap.get(DcMotorEx.class, RETRACTION_ONE);
         retractTwo = hardwareMap.get(DcMotorEx.class, RETRACTION_TWO);
 
-        // Initialize Encoders Here
-        rotEnc = Encoder(hardwareMap.get(DcMotorEx.class, ROTATION_ONE));
-        retEnc = Encoder(hardwareMap.get(DcMotorEx.class, RETRACTION_ONE));
+        retractTwo.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // Reverse encoders as needed
-        // rotEnc.setDirection(Encoder.Direction.REVERSE);
-        // retEnc.setDirection(Encoder.Direction.REVERSE);
-
+        // Reset encoders
         resetEncoders();
 
         rotationTarget = getCurrentRotation();
+        retractionTarget = getCurrentRetraction();
 
+        // Initialize actions
         testDown = new RunAction(this::testDown);
         testUp = new RunAction(this::testUp);
-        
+
+        // Voltage compensation
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
         voltageComp = VOLTAGE_WHEN_TUNED / voltageSensor.getVoltage();
     }
 
     public void update() {
-        controller.setPID(p, i, d);
-        double armPos = getCurrentRotation();
-        double pid = controller.calculate(armPos, rotationTarget);
-        double ff = Math.sin(Math.toRadians(rotationTarget)) * f;
+        RetractionController.setPID(RETp, RETi, RETd);
+        RotationController.setPID(ROTp, ROTi, ROTd);
 
-        double power = pid + ff;
+        double rotPos = getCurrentRotation();
+        double retPos = getCurrentRetraction();
 
-        setRotationPower(power);
+        double rotPID = RotationController.calculate(rotPos, rotationTarget);
+        double retPID = RetractionController.calculate(retPos, retractionTarget);
+
+        double ROTff = Math.sin(Math.toRadians(rotationTarget / ROT_ticks_in_degree)) * ROTf;
+        double RETff = Math.sin(Math.toRadians(retractionTarget / RET_ticks_in_degree)) * RETf;
+
+
+        double ROTpower = rotPID + ROTff;
+        double RETpower = retPID + RETff;
+
+
+
+        setRotationPower(ROTpower);
+        setRetractionPower(RETpower);
     }
+
 
     /* GETTER METHODS FOR POSITIONS */
     public int getCurrentRotation() {
-        return rotEnc.getCurrentPosition();
+        return rotationTwo.getCurrentPosition();
     }
     public int getCurrentRetraction() {
-        return retEnc.getCurrentPosition();
+        return retractTwo.getCurrentPosition();
     }
 
+
     /* TARGET SETTER METHODS */
-    public void setRotationTarget(double target) {
+    public void setRotationTarget(int target) {
         this.rotationTarget = target;
     }
-    public void setRetractionTarget(double target) {
+    public void setRetractionTarget(int target) {
         this.retractionTarget = target;
     }
 
-    /* GETTER METHODS FOR ARM CURRENTS */
-    public double getArmCurrent() {
-        return rotationOne.getCurrent(CurrentUnit.AMPS);
-    }
-    public double getArmCurrent() {
-        return retractOne.getCurrent(CurrentUnit.AMPS);
-    }
-
-    /* TARGET GETTER METHODS */
-    public double getRotationTarget() {
-        return rotationTarget;
-    }
-    public double getRetractionTarget() {
-        return retractionTarget;
-    }
-
-    /* MANUAL CONTROL METHODS */
-    public void manualRotaion(double n) {
-        setRotationTarget(rotationTarget + n * ARM_SPEED);
-    }
-    public void manualRetraction(double n) {
-        setRetractionTarget(retractionTarget + n * RETRACT_SPEED);
-    }
-
-    /* ROTATION COMMANDS */
-    public void testDown() {
-        setRotationTarget(ArmRotations.REST.position);
-    }
-    public void testUp() {
-        setRotationTarget(ArmRotations.MID.position);
-    }
-
-    /* RETRACTION COMMANDS */
-    // TODO: ADD COMMANDS HERE
 
     /* RESET ALL ENCODERS */
-    // TODO: CHECK IF THIS CAN BE REMOVED
     public void resetEncoders() {
         rotationOne.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rotationTwo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -152,38 +150,6 @@ public class Arm extends SubsystemBase {
         retractTwo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
 
-    /* RESET ROTATION TARGET & ENCODER */
-    public void resetRotationPosition() {
-        setRotationTarget(0);
-        rotationOne.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        rotationTwo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        rotationOne.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        rotationTwo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }
-
-    /* RESET RETRACTION TARGET & ENCODER */
-    public void resetRetractionPosition() {
-        setRetractionTarget(0);
-        retractOne.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        retractTwo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-
-        retractOne.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-        retractTwo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-    }
-
-    /* GETTER METHODS FOR ENC VELOCITIES */
-    public double getRotationVelocity() {
-        return rotEnc.getCorrectedVelocity();
-    }
-    public double getRetractionVelocity() {
-        return retEnc.getCorrectedVelocity();
-    }
-
-    /* RETURNS VOLTAGECOMP */
-    public double getVoltageComp() {
-        return voltageComp;
-    }
 
     /* SET POWER METHODS */
     public void setRotationPower(double power) {
@@ -195,15 +161,23 @@ public class Arm extends SubsystemBase {
         retractTwo.setPower(power);
     }
     public void setAllPower(double power) {
-        rotationOne.setPower(power);
-        rotationTwo.setPower(power);
-
-        retractOne.setPower(power);
-        retractTwo.setPower(power);
+        setRotationPower(power);
+        setRetractionPower(power);
     }
+
 
     /* BRAKE */
     public void brake() {
         setAllPower(0);
+    }
+
+
+    /* ROTATION COMMANDS */
+    public void testDown() {
+        setRotationTarget(ArmRotations.REST.position);
+    }
+
+    public void testUp() {
+        setRotationTarget(ArmRotations.MID.position);
     }
 }
