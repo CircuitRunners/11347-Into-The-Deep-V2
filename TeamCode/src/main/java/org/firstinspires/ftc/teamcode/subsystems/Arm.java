@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
-import com.acmerobotics.roadrunner.ftc.Encoder;
 import com.arcrobotics.ftclib.command.SubsystemBase;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -10,8 +9,6 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 
-import com.acmerobotics.roadrunner.ftc.RawEncoder;
-import com.acmerobotics.roadrunner.ftc.OverflowEncoder;
 
 import org.firstinspires.ftc.teamcode.support.RunAction;
 import static org.firstinspires.ftc.teamcode.support.Constants.*;
@@ -119,7 +116,7 @@ public class Arm extends SubsystemBase {
     }
 
 
-    /* GETTER METHODS FOR POSITIONS */
+    /** GETTER METHODS FOR POSITIONS */
     public int getCurrentRotation() {
         return rotationTwo.getCurrentPosition();
     }
@@ -128,7 +125,7 @@ public class Arm extends SubsystemBase {
     }
 
 
-    /* TARGET SETTER METHODS */
+    /** TARGET SETTER METHODS */
     public void setRotationTarget(int target) {
         this.rotationTarget = target;
     }
@@ -137,7 +134,7 @@ public class Arm extends SubsystemBase {
     }
 
 
-    /* RESET ALL ENCODERS */
+    /** RESET ALL ENCODERS */
     public void resetEncoders() {
         rotationOne.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         rotationTwo.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
@@ -151,7 +148,7 @@ public class Arm extends SubsystemBase {
     }
 
 
-    /* SET POWER METHODS */
+    /** SET POWER METHODS */
     public void setRotationPower(double power) {
         rotationOne.setPower(power);
         rotationTwo.setPower(power);
@@ -166,13 +163,13 @@ public class Arm extends SubsystemBase {
     }
 
 
-    /* BRAKE */
+    /** BRAKE */
     public void brake() {
         setAllPower(0);
     }
 
 
-    /* ROTATION COMMANDS */
+    /** ROTATION COMMANDS */
     public void testDown() {
         setRotationTarget(ArmRotations.REST.position);
     }

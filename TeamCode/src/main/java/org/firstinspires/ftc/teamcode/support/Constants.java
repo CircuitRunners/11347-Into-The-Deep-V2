@@ -23,5 +23,10 @@ public class Constants {
     // Drivebase Constants
     public static double pinpointXOffset = -36.0;
     public static double pinpointYOffset = -80.835;
-    
+
+    // Active Intake Constants
+    public static final String LEFT_INTAKE = "leftIntake";
+    public static final String RIGHT_INTAKE = "rightIntake";
+    public static final String PIVOT = "pivot";
+    public static final String HOLD = "hold";
 }
