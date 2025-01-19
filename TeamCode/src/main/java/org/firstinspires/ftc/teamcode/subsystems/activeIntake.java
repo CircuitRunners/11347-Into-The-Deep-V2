@@ -32,6 +32,8 @@ public class activeIntake extends SubsystemBase {
     // DECLARE SERVOS
     private CRServo leftIntake, rightIntake;
     private Servo pivotServo, hold;
+
+    private double defaultPivot = 127.5;
     private ColorSensor colorSensor;
 
     public activeIntake(HardwareMap hardwareMap) {
@@ -57,12 +59,8 @@ public class activeIntake extends SubsystemBase {
         }
     }
 
-    public void intake() {
-        setIntake(-1); // Negative power for intake
-    }
-
-    public void outtake() {
-        setIntake(1); // Positive power for outtake
+    public void intake(double power) {
+        setIntake(power); // Negative power for intake
     }
 
     public void stop() {
@@ -72,25 +70,23 @@ public class activeIntake extends SubsystemBase {
 
     /** SET PIVOT POSES */
     public void setPivot(double pos) {
-        double posCorrected = pos / 360;
+        double posCorrected = defaultPivot + (pos / 360);
         pivotServo.setPosition(posCorrected);
     }
 
     public void pivotMin() {
-        pivotServo.setPosition(pivotPositions.MAX_DOWN.getPosition());
+        pivotServo.setPosition(pivotPositions.MAX_DOWN.position);
     }
-
     public void pivotMax() {
-        pivotServo.setPosition(pivotPositions.MAX_UP.getPosition());
+        pivotServo.setPosition(pivotPositions.MAX_UP.position);
     }
-
     public void pivotMid() {
-        pivotServo.setPosition(pivotPositions.MID.getPosition());
+        pivotServo.setPosition(pivotPositions.MID.position);
     }
 
     /** SET HOLD POSES */
     public void setHold(double pos) {
-        double posCorrected = pos / 360.0;
+        double posCorrected =  (pos / 360.0);
         hold.setPosition(posCorrected);
     }
 

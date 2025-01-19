@@ -17,9 +17,9 @@ import static org.firstinspires.ftc.teamcode.support.Constants.*;
 public class Arm extends SubsystemBase {
 
     public enum ArmRotations {
-        REST(5),
-        MID(100),
-        MAX(8800);
+        REST(500),
+        MID(2000),
+        MAX(8000);
 
         public int position;
 
@@ -35,7 +35,7 @@ public class Arm extends SubsystemBase {
     public enum ArmRetractions {
         REST(-300),
         MID(-100),
-        MAX(-56800);
+        MAX(-57000);
 
         public int position;
 
@@ -79,13 +79,14 @@ public class Arm extends SubsystemBase {
 
         // Reset encoders
         resetEncoders();
+        resetTargets();
 
         rotationTarget = getCurrentRotation();
         retractionTarget = getCurrentRetraction();
 
         // Initialize actions
-        testDown = new RunAction(this::testDown);
-        testUp = new RunAction(this::testUp);
+        testDown = new RunAction(this::rest);
+        testUp = new RunAction(this::max);
 
         // Voltage compensation
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
@@ -146,6 +147,10 @@ public class Arm extends SubsystemBase {
         retractOne.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         retractTwo.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
     }
+    public void resetTargets() {
+        setRotationTarget(0);
+        setRetractionTarget(0);
+    }
 
 
     /** SET POWER METHODS */
@@ -170,11 +175,20 @@ public class Arm extends SubsystemBase {
 
 
     /** ROTATION COMMANDS */
-    public void testDown() {
+    public void rest() {
         setRotationTarget(ArmRotations.REST.position);
     }
-
-    public void testUp() {
+    public void mid() {
         setRotationTarget(ArmRotations.MID.position);
+    }
+    public void max() {
+        setRotationTarget(ArmRotations.MID.position);
+    }
+
+    public void fullRet() {
+        setRetractionTarget(ArmRetractions.REST.position);
+    }
+    public void fullExtend() {
+        setRetractionTarget(ArmRetractions.MAX.position);
     }
 }

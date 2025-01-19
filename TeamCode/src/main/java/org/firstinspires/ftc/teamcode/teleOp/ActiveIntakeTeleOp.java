@@ -31,12 +31,7 @@ public class ActiveIntakeTeleOp extends CommandOpMode {
     public void run() {
         intakeSubsystem.setPivot(pivPos);
         intakeSubsystem.setHold(holdPos);
-
-        if (gamepad1.a) {
-            intakeSubsystem.intake();
-        } if (gamepad2.b) {
-            intakeSubsystem.outtake();
-        }
+        
 
         telemetry.addData("pivot", pivPos);
         telemetry.addData("hold", holdPos);

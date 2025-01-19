@@ -2,26 +2,34 @@ package org.firstinspires.ftc.teamcode.teleOp;
 
 import static org.firstinspires.ftc.teamcode.support.Constants.*;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.CommandOpMode;
-import com.qualcomm.hardware.lynx.LynxModule;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
-import java.util.List;
 import java.util.Locale;
 
+import org.firstinspires.ftc.teamcode.auto.BulkCacheCommand;
+import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 import org.firstinspires.ftc.robotcontroller.internal.GoBildaPinpointDriver;
+import org.firstinspires.ftc.teamcode.subsystems.activeIntake;
 
+@Config
 @TeleOp(name = "Teleop", group = "Teleop")
 public class Teleop extends CommandOpMode {
 
     // Hardware references
     private MecanumDrive drive;
+    private Arm arm;
+    private activeIntake intake;
     private GoBildaPinpointDriver pinpoint;
+
+    public int retractionTarget = 0;
+    public int rotationTarget = 0;
 
     // Gamepad snapshots
     private Gamepad currentGamepad1 = new Gamepad();
@@ -29,14 +37,13 @@ public class Teleop extends CommandOpMode {
 
     @Override
     public void initialize() {
-        // Set up bulk caching
-        List<LynxModule> allHubs = hardwareMap.getAll(LynxModule.class);
-        for (LynxModule hub : allHubs) {
-            hub.setBulkCachingMode(LynxModule.BulkCachingMode.AUTO);
-        }
+        schedule(new BulkCacheCommand(hardwareMap));
 
         // Initialize subsystems
         drive = new MecanumDrive();
+        intake = new activeIntake(hardwareMap);
+        arm = new Arm(hardwareMap);
+        arm.resetTargets();
         drive.init(hardwareMap);
 
         // Pinpoint driver initialization
@@ -49,6 +56,8 @@ public class Teleop extends CommandOpMode {
 
     @Override
     public void run() {
+        super.run();
+        arm.update();
         previousGamepad1.copy(currentGamepad1);
         currentGamepad1.copy(gamepad1);
 
@@ -67,12 +76,51 @@ public class Teleop extends CommandOpMode {
             pinpoint.recalibrateIMU();
         }
 
+        // RETRACTION
+        if (gamepad2.square) {
+            retractionTarget = Arm.ArmRetractions.MAX.getPosition();
+        }
+        if (gamepad2.circle) {
+            retractionTarget = Arm.ArmRetractions.REST.getPosition();
+        }
+
+        // ROTATION
+        if (gamepad2.dpad_up) {
+            rotationTarget = Arm.ArmRotations.MAX.getPosition();
+        }
+        if (gamepad2.dpad_left) {
+            rotationTarget = Arm.ArmRotations.MID.getPosition();
+        }
+        if (gamepad2.dpad_down) {
+            rotationTarget = Arm.ArmRotations.REST.getPosition();
+        }
+        arm.setRetractionTarget(retractionTarget);
+        arm.setRotationTarget(rotationTarget);
+
+        // Intake
+        intake.intake(gamepad2.left_trigger - gamepad2.right_trigger);
+
+        if (gamepad2.left_bumper) {
+            intake.holdOpen();
+        }
+        if (gamepad2.right_bumper) {
+            intake.holdClosed();
+        }
+
+        intake.setPivot(gamepad2.right_stick_y);
+
+
         String data = String.format(Locale.US,
                 "{X: %.3f, Y: %.3f, H: %.3f}",
                 currentPose.getX(DistanceUnit.INCH),
                 currentPose.getY(DistanceUnit.INCH),
                 currentPose.getHeading(AngleUnit.DEGREES)
         );
+
+        telemetry.addData("Current Retraction", arm.getCurrentRetraction());
+        telemetry.addData("Target Retraction", retractionTarget);
+        telemetry.addData("Current Rotation", arm.getCurrentRotation());
+        telemetry.addData("Target Rotation", rotationTarget);
         telemetry.addData("Position", data);
         telemetry.addData("Status", pinpoint.getDeviceStatus());
         telemetry.addData("Pinpoint Frequency", pinpoint.getFrequency());
