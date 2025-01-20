@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.arcrobotics.ftclib.hardware.ServoEx;
 import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -14,9 +13,9 @@ import static org.firstinspires.ftc.teamcode.support.Constants.*;
 public class activeIntake extends SubsystemBase {
 
     public enum pivotPositions {
-        MAX_DOWN(330),
+        MAX_DOWN(282),
         MID(127.5),
-        MAX_UP(70);
+        MAX_UP(75);
 
         public double position;
 
@@ -36,6 +35,10 @@ public class activeIntake extends SubsystemBase {
     private double defaultPivot = 127.5;
     private ColorSensor colorSensor;
 
+    // Timer for intake
+    private long intakeStartTime = 0;
+    private static final long TIMEOUT_MS = 5000;
+
     public activeIntake(HardwareMap hardwareMap) {
         // CRSERVOS
         leftIntake = hardwareMap.get(CRServo.class, LEFT_INTAKE);
@@ -51,11 +54,19 @@ public class activeIntake extends SubsystemBase {
 
     /** POWER SETTERS FOR ACTIVE INTAKE */
     public void setIntake(double power) {
-        if (!isColorDetected()) {
+        long currentTime = System.currentTimeMillis();
+
+        // Check if a timeout has been set or color is detected
+        if (intakeStartTime == 0) {
+            intakeStartTime = currentTime; // Start the timer
+        }
+
+        if (currentTime - intakeStartTime <= TIMEOUT_MS && !isColorDetected()) {
             leftIntake.setPower(power);
             rightIntake.setPower(power);
         } else {
-            stop(); // Stop intake if a color is detected
+            stop(); // Stop intake if time has exceeded or a color is detected
+            intakeStartTime = 0; // Reset the timer
         }
     }
 
@@ -70,10 +81,8 @@ public class activeIntake extends SubsystemBase {
 
     /** SET PIVOT POSES */
     public void setPivot(double pos) {
-        double posCorrected = defaultPivot + (pos / 360);
-        pivotServo.setPosition(posCorrected);
+        pivotServo.setPosition(pos / 360);
     }
-
     public void pivotMin() {
         pivotServo.setPosition(pivotPositions.MAX_DOWN.position);
     }
@@ -82,6 +91,11 @@ public class activeIntake extends SubsystemBase {
     }
     public void pivotMid() {
         pivotServo.setPosition(pivotPositions.MID.position);
+    }
+
+    /** GET PIVOT POS */
+    public double getPivot() {
+        return pivotServo.getPosition();
     }
 
     /** SET HOLD POSES */
@@ -113,5 +127,13 @@ public class activeIntake extends SubsystemBase {
         boolean isBlue = blue > 100 && red < 50 && green < 50;
 
         return isRed || isYellow || isBlue;
+    }
+
+    public String logColorValues() {
+        int red = colorSensor.red();
+        int green = colorSensor.green();
+        int blue = colorSensor.blue();
+
+        return ("Red: " + red + ", Green: " + green + ", Blue: " + blue);
     }
 }

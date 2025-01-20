@@ -8,6 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.qualcomm.robotcore.util.Range;
 
 
 import org.firstinspires.ftc.teamcode.support.RunAction;
@@ -106,12 +107,11 @@ public class Arm extends SubsystemBase {
         double ROTff = Math.sin(Math.toRadians(rotationTarget / ROT_ticks_in_degree)) * ROTf;
         double RETff = Math.sin(Math.toRadians(retractionTarget / RET_ticks_in_degree)) * RETf;
 
+        // CLIPS RANGE OF MOTORS TO BE BETWEEN -1 AND 1
+        double ROTpower = Range.clip(rotPID + ROTff, -1.0, 1.0);
+        double RETpower = Range.clip(retPID + RETff, -1.0, 1.0);
 
-        double ROTpower = rotPID + ROTff;
-        double RETpower = retPID + RETff;
-
-
-
+        // SETS MOTORS TO CLIPPED POWER
         setRotationPower(ROTpower);
         setRetractionPower(RETpower);
     }
