@@ -21,7 +21,7 @@ public class Constants {
     public static final String RETRACTION_TWO = "rightRetraction";
 
     // Drivebase Constants
-    public static double pinpointXOffset = 1.41732; // MM = -36.0
+    public static double pinpointXOffset = -1.41732; // MM = -36.0
     public static double pinpointYOffset = 3.18208661; // MM = -80.835 // 3.18208661
 
     // Active Intake Constants
