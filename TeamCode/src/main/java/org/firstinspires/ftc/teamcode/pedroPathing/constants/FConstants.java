@@ -20,17 +20,17 @@ public class FConstants {
         FollowerConstants.rightFrontMotorDirection = DcMotorSimple.Direction.FORWARD;
         FollowerConstants.rightRearMotorDirection = DcMotorSimple.Direction.FORWARD;
 
-        FollowerConstants.mass = 14.5;
+        FollowerConstants.mass = 15.5;
 
-        FollowerConstants.xMovement = 78.57050876;
-        FollowerConstants.yMovement = 63.9792;
+        FollowerConstants.xMovement = 68.31575; // 68.31575
+        FollowerConstants.yMovement = 50.671225; // 50.671225
 
-        FollowerConstants.forwardZeroPowerAcceleration = -32.9877;
-        FollowerConstants.lateralZeroPowerAcceleration = -63.8118;
+        FollowerConstants.forwardZeroPowerAcceleration = -44.435875; // -44.435875
+        FollowerConstants.lateralZeroPowerAcceleration = -82.086; // -63.8118
 
-        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.05,
+        FollowerConstants.translationalPIDFCoefficients.setCoefficients(0.26,
                 0,
-                0.0001,
+                0.02,
                 0);
         FollowerConstants.useSecondaryTranslationalPID = false;
         FollowerConstants.secondaryTranslationalPIDFCoefficients.setCoefficients(0.1,0,0.01,0); // Not being used, @see useSecondaryTranslationalPID
@@ -50,14 +50,14 @@ public class FConstants {
         FollowerConstants.useSecondaryDrivePID = false;
         FollowerConstants.secondaryDrivePIDFCoefficients.setCoefficients(0.1,0,0,0.6,0); // Not being used, @see useSecondaryDrivePID
 
-        FollowerConstants.zeroPowerAccelerationMultiplier = 4;
-        FollowerConstants.centripetalScaling = 0.0005;
-
-        FollowerConstants.pathEndTimeoutConstraint = 50;
-        FollowerConstants.pathEndTranslationalConstraint = 0.95;
-        FollowerConstants.pathEndTValueConstraint = 0.995;
-        FollowerConstants.pathEndVelocityConstraint = 0.1;
-        FollowerConstants.pathEndTranslationalConstraint = 0.1;
-        FollowerConstants.pathEndHeadingConstraint = 0.007;
+        FollowerConstants.zeroPowerAccelerationMultiplier = 3;
+//        FollowerConstants.centripetalScaling = 0.0005;
+//
+//        FollowerConstants.pathEndTimeoutConstraint = 50;
+//        FollowerConstants.pathEndTranslationalConstraint = 0.95;
+//        FollowerConstants.pathEndTValueConstraint = 0.995;
+//        FollowerConstants.pathEndVelocityConstraint = 0.1;
+//        FollowerConstants.pathEndTranslationalConstraint = 0.1;
+//        FollowerConstants.pathEndHeadingConstraint = 0.007;
     }
 }
