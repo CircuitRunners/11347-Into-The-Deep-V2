@@ -4,9 +4,6 @@ import static org.firstinspires.ftc.teamcode.support.Constants.*;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.CommandOpMode;
-import com.pedropathing.localization.PoseUpdater;
-import com.pedropathing.util.DashboardPoseTracker;
-import com.pedropathing.util.Drawing;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -30,8 +27,6 @@ public class Teleop extends CommandOpMode {
     private Arm arm;
     private activeIntake intake;
     private GoBildaPinpointDriver pinpoint;
-    private PoseUpdater poseUpdater;
-    private DashboardPoseTracker dashboardPoseTracker;
 
     public int retractionTarget = 0;
     public int rotationTarget = 0;
@@ -44,10 +39,6 @@ public class Teleop extends CommandOpMode {
     public void initialize() {
         schedule(new BulkCacheCommand(hardwareMap));
 
-        poseUpdater = new PoseUpdater(hardwareMap);
-
-        dashboardPoseTracker = new DashboardPoseTracker(poseUpdater);
-
         // Initialize subsystems
         drive = new MecanumDrive();
         intake = new activeIntake(hardwareMap);
@@ -59,9 +50,6 @@ public class Teleop extends CommandOpMode {
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         configurePinpoint();
 
-        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
-        Drawing.sendPacket();
-
         telemetry.addLine("Ready!");
         telemetry.update();
     }
@@ -71,13 +59,10 @@ public class Teleop extends CommandOpMode {
         super.run();
         arm.update();
 
-        poseUpdater.update();
-        dashboardPoseTracker.update();
-
         previousGamepad1.copy(currentGamepad1);
         currentGamepad1.copy(gamepad1);
 
-        double forward = currentGamepad1.left_stick_y;
+        double forward = -currentGamepad1.left_stick_y;
         double strafe  =  currentGamepad1.left_stick_x;
         double rotate  =  currentGamepad1.right_stick_x;
 
@@ -141,15 +126,11 @@ public class Teleop extends CommandOpMode {
         telemetry.addData("Status", pinpoint.getDeviceStatus());
         telemetry.addData("Pinpoint Frequency", pinpoint.getFrequency());
         telemetry.update();
-
-        Drawing.drawPoseHistory(dashboardPoseTracker, "#4CAF50");
-        Drawing.drawRobot(poseUpdater.getPose(), "#4CAF50");
-        Drawing.sendPacket();
     }
 
     // Configure the GoBilda Pinpoint Here
     private void configurePinpoint() {
-        pinpoint.recalibrateIMU();
+//        pinpoint.recalibrateIMU();
         pinpoint.resetPosAndIMU();
 
         pinpoint.setOffsets(pinpointXOffset, pinpointYOffset);
