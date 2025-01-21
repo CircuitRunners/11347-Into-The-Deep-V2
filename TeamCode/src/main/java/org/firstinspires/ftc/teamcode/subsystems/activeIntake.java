@@ -13,7 +13,7 @@ import static org.firstinspires.ftc.teamcode.support.Constants.*;
 public class activeIntake extends SubsystemBase {
 
     public enum pivotPositions {
-        MAX_DOWN(282),
+        MAX_DOWN(300),
         MID(127.5),
         MAX_UP(75);
 

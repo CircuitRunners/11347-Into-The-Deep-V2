@@ -11,7 +11,7 @@ import org.firstinspires.ftc.teamcode.subsystems.activeIntake;
 public class ActiveIntakeTeleOp extends CommandOpMode {
 
     private activeIntake intakeSubsystem;
-    public static double pivPos = 0, holdPos = 0, power = 0;
+    public static double pivPos = 127.5, holdPos = 120, power = 0;
 
     @Override
     public void initialize() {
