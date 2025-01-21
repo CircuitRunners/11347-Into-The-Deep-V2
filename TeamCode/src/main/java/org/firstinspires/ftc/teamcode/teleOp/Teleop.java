@@ -4,6 +4,7 @@ import static org.firstinspires.ftc.teamcode.support.Constants.*;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.CommandOpMode;
+import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -31,13 +32,13 @@ public class Teleop extends CommandOpMode {
     public int retractionTarget = 0;
     public int rotationTarget = 0;
 
-    // Gamepad snapshots
-    private Gamepad currentGamepad1 = new Gamepad();
-    private Gamepad previousGamepad1 = new Gamepad();
+    GamepadEx driver, manipulator;
 
     @Override
     public void initialize() {
         schedule(new BulkCacheCommand(hardwareMap));
+         driver = new GamepadEx(gamepad1);
+         manipulator = new GamepadEx(gamepad2);
 
         // Initialize subsystems
         drive = new MecanumDrive();
@@ -59,21 +60,18 @@ public class Teleop extends CommandOpMode {
         super.run();
         arm.update();
 
-        previousGamepad1.copy(currentGamepad1);
-        currentGamepad1.copy(gamepad1);
-
-        double forward = -currentGamepad1.left_stick_y;
-        double strafe  =  currentGamepad1.left_stick_x;
-        double rotate  =  currentGamepad1.right_stick_x;
+        double forward = -driver.getLeftY();
+        double strafe  =  driver.getLeftX();
+        double rotate  =  driver.getRightX();
 
         Pose2D currentPose = driveFieldRelative(forward, strafe, rotate);
 
         // If x is pressed, reset IMU
-        if (currentGamepad1.square) {
+        if (gamepad1.square) {
             pinpoint.resetPosAndIMU();
         }
         // If y is pressed, recalibrate IMU
-        if (currentGamepad1.triangle) {
+        if (gamepad1.triangle) {
             pinpoint.recalibrateIMU();
         }
 
@@ -95,6 +93,7 @@ public class Teleop extends CommandOpMode {
         if (gamepad2.dpad_down) {
             rotationTarget = Arm.ArmRotations.REST.getPosition();
         }
+
         arm.setRetractionTarget(retractionTarget);
         arm.setRotationTarget(rotationTarget);
 

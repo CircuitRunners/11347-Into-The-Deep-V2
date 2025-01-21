@@ -112,7 +112,7 @@ public class Arm extends SubsystemBase {
         double RETpower = Range.clip(retPID + RETff, -1.0, 1.0);
 
         // SETS MOTORS TO CLIPPED POWER
-        setRotationPower(ROTpower);
+        setRotationPower(ROTpower * 0.8);
         setRetractionPower(RETpower);
     }
 
