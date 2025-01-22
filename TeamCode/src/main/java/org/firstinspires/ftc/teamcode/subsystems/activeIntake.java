@@ -9,6 +9,8 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 import static org.firstinspires.ftc.teamcode.support.Constants.*;
 
+import org.firstinspires.ftc.teamcode.support.RunAction;
+
 @Config
 public class activeIntake extends SubsystemBase {
 
@@ -39,6 +41,7 @@ public class activeIntake extends SubsystemBase {
     private long intakeStartTime = 0;
     private static final long TIMEOUT_MS = 5000;
 
+    public RunAction pivotMove, pivotMid, pivotScore, holdOpen, holdClosed;
     public activeIntake(HardwareMap hardwareMap) {
         // CRSERVOS
         leftIntake = hardwareMap.get(CRServo.class, LEFT_INTAKE);
@@ -52,6 +55,13 @@ public class activeIntake extends SubsystemBase {
 
         // COLOR SENSOR
         colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
+
+        pivotMove = new RunAction(this::pivotMove);
+        pivotMid = new RunAction(this::pivotMid);
+        pivotScore = new RunAction(this::pivotScore);
+
+        holdOpen = new RunAction(this::holdOpen);
+        holdClosed = new RunAction(this::holdClosed);
     }
 
     /** POWER SETTERS FOR ACTIVE INTAKE */
@@ -85,10 +95,10 @@ public class activeIntake extends SubsystemBase {
     public void setPivot(double pos) {
         pivotServo.setPosition(getPivot() + ((pos * 10) / 360));
     }
-    public void pivotMin() {
+    public void pivotMove() {
         pivotServo.setPosition(pivotPositions.MAX_DOWN.position);
     }
-    public void pivotMax() {
+    public void pivotScore() {
         pivotServo.setPosition(pivotPositions.MAX_UP.position);
     }
     public void pivotMid() {

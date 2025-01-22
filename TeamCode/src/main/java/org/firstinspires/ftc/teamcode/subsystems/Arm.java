@@ -18,9 +18,11 @@ import static org.firstinspires.ftc.teamcode.support.Constants.*;
 public class Arm extends SubsystemBase {
 
     public enum ArmRotations {
+        DRIVE(300),
+        GRAB(150),
         REST(500),
         MID(2000),
-        MAX(8000);
+        MAX(6000);
 
         public int position;
 
@@ -57,14 +59,14 @@ public class Arm extends SubsystemBase {
     public double ROTf = ROTkF;
     public double RETf = RETkF;
 
-    public int rotationTarget = targetRotation;
-    public int retractionTarget = targetRetraction;
+    public int rotationTarget = 0;
+    public int retractionTarget = 0;
 
     private VoltageSensor voltageSensor;
     private double voltageComp;
     private static final double VOLTAGE_WHEN_TUNED = 13.0;
 
-    public RunAction testDown, testUp;
+    public RunAction max, drive, grab, fullRet, fullExtend;
 
     public Arm(HardwareMap hardwareMap) {
         RotationController = new PIDController(ROTp, ROTi, ROTd);
@@ -86,8 +88,12 @@ public class Arm extends SubsystemBase {
         retractionTarget = getCurrentRetraction();
 
         // Initialize actions
-        testDown = new RunAction(this::rest);
-        testUp = new RunAction(this::max);
+        max = new RunAction(this::max);
+        drive = new RunAction(this::drive);
+        grab = new RunAction(this::grab);
+
+        fullRet = new RunAction(this::fullRet);
+        fullExtend = new RunAction(this::fullExtend);
 
         // Voltage compensation
         voltageSensor = hardwareMap.voltageSensor.iterator().next();
@@ -123,6 +129,12 @@ public class Arm extends SubsystemBase {
     }
     public int getCurrentRetraction() {
         return retractTwo.getCurrentPosition();
+    }
+    public int getRotationTarget() {
+        return rotationTarget;
+    }
+    public int getRetractionTarget() {
+        return retractionTarget;
     }
 
 
@@ -183,14 +195,14 @@ public class Arm extends SubsystemBase {
 
 
     /** ROTATION COMMANDS */
-    public void rest() {
-        setRotationTarget(ArmRotations.REST.position);
-    }
-    public void mid() {
-        setRotationTarget(ArmRotations.MID.position);
-    }
     public void max() {
-        setRotationTarget(ArmRotations.MID.position);
+        setRotationTarget(ArmRotations.MAX.position);
+    }
+    public void drive() {
+        setRotationTarget(ArmRotations.DRIVE.position);
+    }
+    public void grab() {
+        setRotationTarget(ArmRotations.GRAB.position);
     }
 
     public void fullRet() {
