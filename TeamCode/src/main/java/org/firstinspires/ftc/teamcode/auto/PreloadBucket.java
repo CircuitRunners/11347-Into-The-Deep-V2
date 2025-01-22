@@ -19,6 +19,7 @@ import org.firstinspires.ftc.teamcode.automations.universalAutomations;
 import org.firstinspires.ftc.teamcode.pedroPathing.constants.FConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.constants.LConstants;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
+import org.firstinspires.ftc.teamcode.subsystems.ArmTest;
 import org.firstinspires.ftc.teamcode.subsystems.activeIntake;
 import org.firstinspires.ftc.teamcode.support.Actions;
 import org.firstinspires.ftc.teamcode.support.SleepCommand;
@@ -30,11 +31,12 @@ public class PreloadBucket extends OpMode{
     private Follower follower;
     private Timer pathTimer;
     private Arm arm;
+//    private ArmTest arm;
     private activeIntake intake;
     private int pathState = 0;
 
     private final Pose startPose = new Pose(8.8,113.5, Math.toRadians(0));
-    private final Pose preloadBasked = new Pose(20, 124, Math.toRadians(135)); // 315
+    private final Pose preloadBasked = new Pose(20, 124, Math.toRadians(315)); // 315
 
     private PathChain toBucket;
 
@@ -51,7 +53,7 @@ public class PreloadBucket extends OpMode{
         switch (pathState) {
             case -1:
                 if (!follower.isBusy()) {
-                    Actions.runBlocking(arm.drive);
+                    arm.setRotationTarget(300);
                     setPathState(0);
                 }
                 break;
@@ -63,11 +65,10 @@ public class PreloadBucket extends OpMode{
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    Actions.runBlocking(arm.max);
-                    Actions.runBlocking(new SleepCommand(2));
-                    Actions.runBlocking(arm.fullExtend);
-                    Actions.runBlocking(new SleepCommand(3));
-                    Actions.runBlocking(intake.pivotScore);
+                    arm.setRotationTarget(7000);
+                    Actions.runBlocking(new SleepCommand(1));
+                    arm.setRetractionTarget(30000);
+                    intake.pivotScore();
                 }
                 break;
             default:
@@ -96,6 +97,7 @@ public class PreloadBucket extends OpMode{
         follower.setMaxPower(1);
 
         arm = new Arm(hardwareMap);
+//        arm = new ArmTest(hardwareMap);
         intake = new activeIntake(hardwareMap);
 
         intake.pivotMove();

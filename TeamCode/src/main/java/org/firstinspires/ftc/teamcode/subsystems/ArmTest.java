@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.subsystems;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.SubsystemBase;
-import com.arcrobotics.ftclib.controller.PIDController;
+import com.arcrobotics.ftclib.controller.PIDFController;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -15,7 +15,7 @@ import org.firstinspires.ftc.teamcode.support.RunAction;
 import static org.firstinspires.ftc.teamcode.support.Constants.*;
 
 @Config
-public class Arm {
+public class ArmTest {
 
     public enum ArmRotations {
         DRIVE(300),
@@ -52,7 +52,7 @@ public class Arm {
     }
 
     public DcMotorEx rotationOne, rotationTwo, retractOne, retractTwo;
-    private PIDController RotationController, RetractionController;
+    private PIDFController RotationController, RetractionController;
 
     public double ROTp = ROTkP, ROTi = ROTkI, ROTd = ROTkD;
     public double RETp = RETkP, RETi = RETkI, RETd = RETkD;
@@ -63,16 +63,17 @@ public class Arm {
     public int retractionTarget = 0;
     public boolean rotReached;
     public boolean retReached;
+    public boolean retRetracted;
+    public boolean rotMin;
+    public double rotPos;
+    public double retPos;
+    public boolean pidfActive = true;
 
-    private VoltageSensor voltageSensor;
-    private double voltageComp;
-    private static final double VOLTAGE_WHEN_TUNED = 13.0;
+//    public RunAction max, drive, grab, fullRet, fullExtend;
 
-    public RunAction max, drive, grab, fullRet, fullExtend;
-
-    public Arm(HardwareMap hardwareMap) {
-        RotationController = new PIDController(ROTp, ROTi, ROTd);
-        RetractionController = new PIDController(RETp, RETi, RETd);
+    public ArmTest(HardwareMap hardwareMap) {
+        RotationController = new PIDFController(ROTp, ROTi, ROTd, ROTkF);
+        RetractionController = new PIDFController(RETp, RETi, RETd, RETkF);
 
         // Initialize motors
         rotationOne = hardwareMap.get(DcMotorEx.class, ROTATION_ONE);
@@ -82,59 +83,65 @@ public class Arm {
 
         retractTwo.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        // Reset encoders
         resetEncoders();
-        resetTargets();
 
-        rotationTarget = getCurrentRotation();
-        retractionTarget = getCurrentRetraction();
+        RotationController.setTolerance(50);
+        RetractionController.setTolerance(300);
 
         // Initialize actions
-        max = new RunAction(this::max);
-        drive = new RunAction(this::drive);
-        grab = new RunAction(this::grab);
-
-        fullRet = new RunAction(this::fullRet);
-        fullExtend = new RunAction(this::fullExtend);
-
-        // Voltage compensation
-        voltageSensor = hardwareMap.voltageSensor.iterator().next();
-        voltageComp = VOLTAGE_WHEN_TUNED / voltageSensor.getVoltage();
+//        max = new RunAction(this::max);
+//        drive = new RunAction(this::drive);
+//        grab = new RunAction(this::grab);
+//
+//        fullRet = new RunAction(this::fullRet);
+//        fullExtend = new RunAction(this::fullExtend);
     }
 
     public void update() {
-        RetractionController.setPID(RETp, RETi, RETd);
-        RotationController.setPID(ROTp, ROTi, ROTd);
+        rotPos = getCurrentRotation();
+        retPos = getCurrentRetraction();
 
-        double rotPos = getCurrentRotation();
-        double retPos = getCurrentRetraction();
+        double rotPower = RotationController.calculate(rotPos, rotationTarget);
+        rotReached = RotationController.atSetPoint() || (rotPos >= (rotationTarget));
+        rotMin = rotationTarget <= 300;
 
-        double rotPID = RotationController.calculate(rotPos, rotationTarget);
-        double retPID = RetractionController.calculate(retPos, retractionTarget);
-
-        double ROTff = Math.sin(Math.toRadians(rotationTarget / ROT_ticks_in_degree)) * ROTf;
-        double RETff = Math.sin(Math.toRadians(retractionTarget / RET_ticks_in_degree)) * RETf;
+        double retPower = RetractionController.calculate(retPos, targetRetraction);
+        retReached = RetractionController.atSetPoint() || (retPos >= (retractionTarget));
+        retRetracted = retractionTarget <= 100;
 
         // CLIPS RANGE OF MOTORS TO BE BETWEEN -1 AND 1
-        double ROTpower = Range.clip(rotPID + ROTff, -1.0, 1.0);
-        double RETpower = Range.clip(retPID + RETff, -1.0, 1.0);
+        double ROTpower = Range.clip(rotPower, -1.0, 1.0);
+        double RETpower = Range.clip(retPower, -1.0, 1.0);
 
-        rotReached = (rotPos >= (rotationTarget));
-        retReached = (rotPos >= (retractionTarget));
+        if (pidfActive) {
+            if (retReached) {
+                setRetractionPower(0);
+            } else {
+                setRetractionPower(RETpower);
+            }
 
-        // SETS MOTORS TO CLIPPED POWER
-        if (rotReached) {
-            setRotationPower(0);
-        } else {
-            setRotationPower(ROTpower * 0.7);
+            if (rotReached) {
+                setRotationPower(0);
+            } else {
+                setRotationPower(ROTpower * 0.7);
+            }
         }
 
-        if (retReached) {
-            setRetractionTarget(0);
-        } else {
-            setRetractionPower(RETpower);
-        }
-    }   
+//        RetractionController.setPID(RETp, RETi, RETd);
+//        RotationController.setPID(ROTp, ROTi, ROTd);
+//
+//
+//        double rotPID = RotationController.calculate(rotPos, rotationTarget);
+//        double retPID = RetractionController.calculate(retPos, retractionTarget);
+//
+//        double ROTff = Math.sin(Math.toRadians(rotationTarget / ROT_ticks_in_degree)) * ROTf;
+//        double RETff = Math.sin(Math.toRadians(retractionTarget / RET_ticks_in_degree)) * RETf;
+//
+//
+//        // SETS MOTORS TO CLIPPED POWER
+//        setRotationPower(ROTpower * 0.8);
+//        setRetractionPower(RETpower);
+    }
 
 
     /** GETTER METHODS FOR POSITIONS */
@@ -153,19 +160,12 @@ public class Arm {
 
 
     /** TARGET SETTER METHODS */
-//    public void setRotationTarget(int target) {
-//        this.rotationTarget = target;
-//    }
-//    public void setRetractionTarget(int target) {
-//        this.retractionTarget = target;
-//    }
-    /** TARGET SETTER METHODS */
     public void setRotationTarget(int target) {
-        this.rotationTarget = Range.clip(target, 0, ArmTest.ArmRotations.MAX.position);
+        this.rotationTarget = Range.clip(target, 0, ArmRotations.MAX.position);
         RotationController.setSetPoint(target);
     }
     public void setRetractionTarget(int target) {
-        this.retractionTarget = Range.clip(target, 0, ArmTest.ArmRetractions.MAX.position);
+        this.retractionTarget = Range.clip(target, 0, ArmRetractions.MAX.position);
         RetractionController.setSetPoint(target);
     }
 
