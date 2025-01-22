@@ -30,7 +30,8 @@ public class Teleop extends CommandOpMode {
     private GoBildaPinpointDriver pinpoint;
 
     public int retractionTarget = 0;
-    public int rotationTarget = 0;
+    public int rotationTarget = 300;
+    public static int testMult = 105;
 
     GamepadEx driver, manipulator;
 
@@ -61,7 +62,7 @@ public class Teleop extends CommandOpMode {
         arm.update();
 
         double forward = -driver.getLeftY();
-        double strafe  =  driver.getLeftX();
+        double strafe  =  -driver.getLeftX();
         double rotate  =  driver.getRightX();
 
         Pose2D currentPose = driveFieldRelative(forward, strafe, rotate);
@@ -83,6 +84,7 @@ public class Teleop extends CommandOpMode {
             retractionTarget = Arm.ArmRetractions.REST.getPosition();
         }
 
+
         // ROTATION
         if (gamepad2.dpad_up) {
             rotationTarget = Arm.ArmRotations.MAX.getPosition();
@@ -92,6 +94,9 @@ public class Teleop extends CommandOpMode {
         }
         if (gamepad2.dpad_down) {
             rotationTarget = Arm.ArmRotations.REST.getPosition();
+        }
+        if (gamepad2.left_stick_x > 0.3 || gamepad2.left_stick_x < 0.3) {
+            rotationTarget += ((int) gamepad2.left_stick_x) * testMult;
         }
 
         arm.setRetractionTarget(retractionTarget);

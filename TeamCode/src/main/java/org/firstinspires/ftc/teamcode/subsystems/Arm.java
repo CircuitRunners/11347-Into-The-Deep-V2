@@ -134,6 +134,14 @@ public class Arm extends SubsystemBase {
         this.retractionTarget = target;
     }
 
+    /** MANUAL SETTERS */
+    public void ROTManual(double pos) {
+        setRotationTarget(getCurrentRotation() + (int) (pos * 5));
+    }
+    public void RETManaul(int d) {
+        setRetractionTarget(getCurrentRetraction() + (d * 50));
+    }
+
 
     /** RESET ALL ENCODERS */
     public void resetEncoders() {

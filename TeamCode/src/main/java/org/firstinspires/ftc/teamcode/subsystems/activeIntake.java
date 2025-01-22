@@ -48,7 +48,7 @@ public class activeIntake extends SubsystemBase {
         pivotServo = hardwareMap.get(Servo.class, PIVOT);
         hold = hardwareMap.get(Servo.class, HOLD);
 
-        pivotServo.setPosition(defaultPivot / 360);
+        pivotServo.setPosition(pivotPositions.MAX_DOWN.getPosition());
 
         // COLOR SENSOR
         colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
@@ -83,7 +83,7 @@ public class activeIntake extends SubsystemBase {
 
     /** SET PIVOT POSES */
     public void setPivot(double pos) {
-        pivotServo.setPosition(getPivot() + (pos / 360));
+        pivotServo.setPosition(getPivot() + ((pos * 10) / 360));
     }
     public void pivotMin() {
         pivotServo.setPosition(pivotPositions.MAX_DOWN.position);
