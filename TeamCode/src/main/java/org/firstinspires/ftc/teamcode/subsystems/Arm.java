@@ -22,7 +22,7 @@ public class Arm {
         GRAB(150),
         REST(500),
         MID(2000),
-        MAX(6000);
+        MAX(8000);
 
         public int position;
 
