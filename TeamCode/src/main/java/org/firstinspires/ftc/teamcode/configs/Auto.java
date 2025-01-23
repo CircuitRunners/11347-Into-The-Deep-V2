@@ -39,6 +39,7 @@ public class Auto {
         arm = new BaronArm(hardwareMap, telemetry);
         ret = new BaronRetraction(hardwareMap, telemetry);
 
+        Constants.setConstants(FConstants.class, LConstants.class);
         this.follower = follower;
         this.telemetry = telemetry;
 

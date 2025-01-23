@@ -19,6 +19,7 @@ public class BaronPreloadBucket extends OpMode {
 
     @Override
     public void init() {
+        Constants.setConstants(FConstants.class, LConstants.class);
         auto = new Auto(hardwareMap, telemetry, new Follower(hardwareMap), false, true);
     }
 
