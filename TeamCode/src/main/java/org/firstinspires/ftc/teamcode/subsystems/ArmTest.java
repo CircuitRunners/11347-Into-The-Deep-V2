@@ -83,10 +83,13 @@ public class ArmTest {
 
         retractTwo.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        rotationOne.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rotationTwo.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         resetEncoders();
 
-        RotationController.setTolerance(50);
-        RetractionController.setTolerance(300);
+        RotationController.setTolerance(5);
+        RetractionController.setTolerance(30);
 
         // Initialize actions
 //        max = new RunAction(this::max);
@@ -115,16 +118,17 @@ public class ArmTest {
 
         if (pidfActive) {
             if (retReached) {
-                setRetractionPower(0);
+
             } else {
                 setRetractionPower(RETpower);
             }
 
-            if (rotReached) {
-                setRotationPower(0);
-            } else {
-                setRotationPower(ROTpower * 0.7);
-            }
+        }
+
+        if (rotReached) {
+            setRotationPower(ROTpower * 0.1);
+        } else {
+            setRotationPower(ROTpower * 0.7);
         }
 
 //        RetractionController.setPID(RETp, RETi, RETd);

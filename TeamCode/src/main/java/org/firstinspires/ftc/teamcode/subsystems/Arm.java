@@ -82,6 +82,9 @@ public class Arm {
 
         retractTwo.setDirection(DcMotorSimple.Direction.REVERSE);
 
+        rotationOne.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        rotationTwo.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         // Reset encoders
         resetEncoders();
         resetTargets();
@@ -119,21 +122,9 @@ public class Arm {
         double ROTpower = Range.clip(rotPID + ROTff, -1.0, 1.0);
         double RETpower = Range.clip(retPID + RETff, -1.0, 1.0);
 
-        rotReached = (rotPos >= (rotationTarget));
-        retReached = (rotPos >= (retractionTarget));
-
         // SETS MOTORS TO CLIPPED POWER
-        if (rotReached) {
-            setRotationPower(0);
-        } else {
-            setRotationPower(ROTpower * 0.7);
-        }
-
-        if (retReached) {
-            setRetractionTarget(0);
-        } else {
-            setRetractionPower(RETpower);
-        }
+        setRotationPower(ROTpower * 0.8);
+        setRetractionPower(RETpower);
     }   
 
 

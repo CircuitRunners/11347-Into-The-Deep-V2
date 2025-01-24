@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.Auto;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
@@ -27,15 +28,15 @@ import org.firstinspires.ftc.teamcode.support.SleepCommand;
 
 import java.util.List;
 
+@Config
 @Autonomous
-public class PreloadBucket extends OpMode{
+public class ArmTuner extends OpMode{
     private Follower follower;
     private Timer pathTimer;
     private ArmRot rot;
     private activeIntake intake;
     private int pathState = 0;
-
-    public static int target = 0;
+    public static int testing = 0;
 
     private final Pose startPose = new Pose(8.8,113.5, Math.toRadians(0));
     private final Pose preloadBasked = new Pose(20, 124, Math.toRadians(315)); // 315
@@ -55,7 +56,7 @@ public class PreloadBucket extends OpMode{
         switch (pathState) {
             case -1:
                 if (!follower.isBusy()) {
-                    target = 1000;
+                    rot.setTarget(testing);
                     setPathState(0);
                 }
                 break;
@@ -67,7 +68,6 @@ public class PreloadBucket extends OpMode{
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    target = 6000;
                     Actions.runBlocking(new SleepCommand(1));
                     intake.pivotScore();
                 }
@@ -100,7 +100,10 @@ public class PreloadBucket extends OpMode{
         rot = new ArmRot(hardwareMap, telemetry);
         intake = new activeIntake(hardwareMap);
 
+        testing = 1000;
+
         intake.pivotMove();
+        rot.update();
 
         buildPaths();
 
@@ -112,8 +115,6 @@ public class PreloadBucket extends OpMode{
     @Override
     public void loop() {
         rot.update();
-        rot.setTarget(target);
-
         follower.update();
         autonomousPathUpdate();
 
