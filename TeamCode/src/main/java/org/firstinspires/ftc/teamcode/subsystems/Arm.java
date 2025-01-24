@@ -124,7 +124,7 @@ public class Arm {
 
         // SETS MOTORS TO CLIPPED POWER
         setRotationPower(ROTpower * 0.8);
-        setRetractionPower(RETpower);
+//        setRetractionPower(RETpower);
     }   
 
 

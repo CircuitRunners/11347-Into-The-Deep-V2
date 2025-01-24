@@ -15,6 +15,7 @@ import java.util.Locale;
 
 import org.firstinspires.ftc.teamcode.auto.BulkCacheCommand;
 import org.firstinspires.ftc.teamcode.subsystems.Arm;
+import org.firstinspires.ftc.teamcode.subsystems.ArmRet;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 import org.firstinspires.ftc.robotcontroller.internal.GoBildaPinpointDriver;
 import org.firstinspires.ftc.teamcode.subsystems.activeIntake;
@@ -26,11 +27,15 @@ public class Teleop extends CommandOpMode {
     // Hardware references
     private MecanumDrive drive;
     private Arm arm;
+
+    private ArmRet ret;
     private activeIntake intake;
     private GoBildaPinpointDriver pinpoint;
 
     public int retractionTarget = 0;
     public int rotationTarget = 300;
+
+    public static int FULL = 570000, MIN = 300;
     public static int testMult = 105;
 
     GamepadEx driver, manipulator;
@@ -45,6 +50,7 @@ public class Teleop extends CommandOpMode {
         drive = new MecanumDrive();
         intake = new activeIntake(hardwareMap);
         arm = new Arm(hardwareMap);
+        ret = new ArmRet(hardwareMap, telemetry);
         arm.resetTargets();
         drive.init(hardwareMap);
 
@@ -60,6 +66,7 @@ public class Teleop extends CommandOpMode {
     public void run() {
         super.run();
         arm.update();
+        ret.update();
 
         double forward = -driver.getLeftY();
         double strafe  =  -driver.getLeftX();
@@ -78,7 +85,7 @@ public class Teleop extends CommandOpMode {
 
         // RETRACTION
         if (gamepad2.square) {
-            retractionTarget = Arm.ArmRetractions.MAX.getPosition();
+            retractionTarget = Arm.ArmRetractions.MID.getPosition();
         }
         if (gamepad2.circle) {
             retractionTarget = Arm.ArmRetractions.REST.getPosition();
@@ -86,20 +93,23 @@ public class Teleop extends CommandOpMode {
 
 
         // ROTATION
-        if (gamepad2.dpad_up) {
-            rotationTarget = Arm.ArmRotations.MAX.getPosition();
-        }
+//        if (gamepad2.dpad_up) {
+//            rotationTarget = Arm.ArmRotations.MAX.getPosition();
+//        }
         if (gamepad2.dpad_left) {
-            rotationTarget = Arm.ArmRotations.MID.getPosition();
+            ret.setTarget(FULL);
         }
         if (gamepad2.dpad_down) {
-            rotationTarget = Arm.ArmRotations.REST.getPosition();
-        }
-        if (gamepad2.left_stick_x > 0.3 || gamepad2.left_stick_x < 0.3) {
-            rotationTarget += ((int) gamepad2.left_stick_x) * testMult;
+            ret.setTarget(MIN);
         }
 
-        arm.setRetractionTarget(retractionTarget);
+        ret.manual(gamepad2.left_stick_y);
+
+//        if (gamepad2.left_stick_x > 0.3 || gamepad2.left_stick_x < 0.3) {
+//            rotationTarget += ((int) gamepad2.left_stick_x) * testMult;
+//        }
+
+//        arm.setRetractionTarget(retractionTarget);
         arm.setRotationTarget(rotationTarget);
 
         // Intake
@@ -112,7 +122,7 @@ public class Teleop extends CommandOpMode {
             intake.holdClosed();
         }
 
-        intake.setPivot(gamepad2.right_stick_y);
+//        intake.setPivot(gamepad2.right_stick_y);
 
 
         String data = String.format(Locale.US,
@@ -123,7 +133,7 @@ public class Teleop extends CommandOpMode {
         );
 
         telemetry.addData("Current Retraction", arm.getCurrentRetraction());
-        telemetry.addData("Target Retraction", retractionTarget);
+        telemetry.addData("Target Retraction", ret.getTarget());
         telemetry.addData("Current Rotation", arm.getCurrentRotation());
         telemetry.addData("Target Rotation", rotationTarget);
         telemetry.addData("Position", data);

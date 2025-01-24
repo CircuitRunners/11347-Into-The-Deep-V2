@@ -6,7 +6,6 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.follower.Follower;
 import com.pedropathing.localization.Pose;
 import com.pedropathing.pathgen.BezierLine;
-import com.pedropathing.pathgen.Path;
 import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
@@ -16,12 +15,9 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.automations.universalAutomations;
 import org.firstinspires.ftc.teamcode.pedroPathing.constants.FConstants;
 import org.firstinspires.ftc.teamcode.pedroPathing.constants.LConstants;
-import org.firstinspires.ftc.teamcode.subsystems.Arm;
 import org.firstinspires.ftc.teamcode.subsystems.ArmRot;
-import org.firstinspires.ftc.teamcode.subsystems.ArmTest;
 import org.firstinspires.ftc.teamcode.subsystems.activeIntake;
 import org.firstinspires.ftc.teamcode.support.Actions;
 import org.firstinspires.ftc.teamcode.support.SleepCommand;
@@ -36,12 +32,12 @@ public class ArmTuner extends OpMode{
     private ArmRot rot;
     private activeIntake intake;
     private int pathState = 0;
-    public static int testing = 0;
+    public static int drive = 0, HIGH = 0;
 
     private final Pose startPose = new Pose(8.8,113.5, Math.toRadians(0));
     private final Pose preloadBasked = new Pose(20, 124, Math.toRadians(315)); // 315
 
-    private PathChain toBucket;
+    private PathChain toBucket, rerun;
 
     private Telemetry telem;
 
@@ -50,26 +46,38 @@ public class ArmTuner extends OpMode{
                 .addPath(new BezierLine(new Point(startPose), new Point(preloadBasked)))
                 .setLinearHeadingInterpolation(startPose.getHeading(), preloadBasked.getHeading())
                 .build();
+
+        rerun = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(preloadBasked), new Point(startPose)))
+                .setLinearHeadingInterpolation(preloadBasked.getHeading(), startPose.getHeading())
+                .build();
     }
 
     public void autonomousPathUpdate() {
         switch (pathState) {
             case -1:
                 if (!follower.isBusy()) {
-                    rot.setTarget(testing);
+                    rot.setTarget(drive);
                     setPathState(0);
                 }
                 break;
             case 0:
                 if (!follower.isBusy()) {
-                    follower.followPath(toBucket, true);
+                    follower.followPath(toBucket, false);
                     setPathState(1);
                 }
                 break;
             case 1:
                 if (!follower.isBusy()) {
+                    rot.setTarget(HIGH);
                     Actions.runBlocking(new SleepCommand(1));
-                    intake.pivotScore();
+                    Actions.runBlocking(intake.pivotScore);
+                    setPathState(2);
+                }
+                break;
+            case 2:
+                if (!follower.isBusy()) {
+                    follower.followPath(rerun, false);
                 }
                 break;
             default:
@@ -100,10 +108,11 @@ public class ArmTuner extends OpMode{
         rot = new ArmRot(hardwareMap, telemetry);
         intake = new activeIntake(hardwareMap);
 
-        testing = 1000;
+        drive = 1000;
+        HIGH = 7000;
 
         intake.pivotMove();
-        rot.update();
+//        rot.update();
 
         buildPaths();
 

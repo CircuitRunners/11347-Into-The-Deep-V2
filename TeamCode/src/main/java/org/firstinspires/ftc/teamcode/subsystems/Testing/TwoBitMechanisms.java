@@ -49,7 +49,7 @@ public class TwoBitMechanisms extends SubsystemBase {
     public double getPower() {
         double power;
         double current = getPosition();
-        if (current > 8000) {
+        if (current > 7500) {
             power = 0;
         } else if (current < 300) {
             power = 0;

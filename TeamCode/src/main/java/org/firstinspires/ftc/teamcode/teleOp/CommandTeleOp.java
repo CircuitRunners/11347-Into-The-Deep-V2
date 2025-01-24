@@ -62,7 +62,7 @@ public class CommandTeleOp extends CommandOpMode {
 
         mechanism.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
                 .whenPressed(new InstantCommand(() -> {pidActive = true;}))
-                .whenPressed(new ArmRetPID(mechanisms, EXTEND).withTimeout(1500))
+                .whenPressed(new ArmRetPID(mechanisms, EXTEND).withTimeout(2500))
                 .whenReleased(new InstantCommand(() -> {pidActive = false;}));
 
 

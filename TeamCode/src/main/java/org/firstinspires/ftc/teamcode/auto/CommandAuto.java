@@ -13,6 +13,8 @@ import com.pedropathing.pathgen.PathChain;
 import com.pedropathing.pathgen.Point;
 import com.pedropathing.util.Constants;
 import com.pedropathing.util.Timer;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcontroller.internal.GoBildaPinpointDriver;
@@ -24,6 +26,8 @@ import org.firstinspires.ftc.teamcode.subsystems.Testing.ArmPID;
 import org.firstinspires.ftc.teamcode.subsystems.Testing.TwoBitMechanisms;
 import org.firstinspires.ftc.teamcode.subsystems.activeIntake;
 
+@Disabled
+@Autonomous
 public class CommandAuto extends CommandOpMode {
     private DcMotor rot1, rot2, ret1, ret2;
     TwoBitMechanisms mechanisms;
@@ -34,7 +38,7 @@ public class CommandAuto extends CommandOpMode {
     private activeIntake intake;
     private int pathState = 0;
 
-    final double HIGH = 7000;
+    final double HIGH = 6000;
     final double EXTEND = 57000;
 
     private final Pose startPose = new Pose(8.8,113.5, Math.toRadians(0));
@@ -77,7 +81,7 @@ public class CommandAuto extends CommandOpMode {
                         }),
                         new SequentialCommandGroup(
                                 new WaitCommand(1000),
-                                new ArmPID(mechanisms, HIGH)
+                                new ArmPID(mechanisms, HIGH).withTimeout(1500)
                         )
 
                 )
