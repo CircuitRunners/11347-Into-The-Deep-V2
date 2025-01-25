@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.Range;
 
 import static org.firstinspires.ftc.teamcode.support.Constants.*;
 
@@ -41,7 +42,6 @@ public class activeIntake extends SubsystemBase {
     private long intakeStartTime = 0;
     private static final long TIMEOUT_MS = 5000;
 
-    public RunAction pivotMove, pivotMid, pivotScore, holdOpen, holdClosed;
     public activeIntake(HardwareMap hardwareMap) {
         // CRSERVOS
         leftIntake = hardwareMap.get(CRServo.class, LEFT_INTAKE);
@@ -51,17 +51,10 @@ public class activeIntake extends SubsystemBase {
         pivotServo = hardwareMap.get(Servo.class, PIVOT);
         hold = hardwareMap.get(Servo.class, HOLD);
 
-        pivotServo.setPosition(pivotPositions.MAX_DOWN.getPosition());
+//        pivotServo.setPosition(pivotPositions.MAX_DOWN.getPosition());
 
         // COLOR SENSOR
         colorSensor = hardwareMap.get(ColorSensor.class, "colorSensor");
-
-        pivotMove = new RunAction(this::pivotMove);
-        pivotMid = new RunAction(this::pivotMid);
-        pivotScore = new RunAction(this::pivotScore);
-
-        holdOpen = new RunAction(this::holdOpen);
-        holdClosed = new RunAction(this::holdClosed);
     }
 
     /** POWER SETTERS FOR ACTIVE INTAKE */
@@ -83,17 +76,36 @@ public class activeIntake extends SubsystemBase {
     }
 
     public void intake(double power) {
+        power = Range.clip(power, -1, 0.7);
+
         setIntake(power); // Negative power for intake
+    }
+
+    public void in() {
+        leftIntake.setPower(-1);
+        rightIntake.setPower(-1);
+    }
+
+    public void out() {
+        leftIntake.setPower(1);
+        rightIntake.setPower(1);
     }
 
     public void stop() {
         leftIntake.setPower(0);
         rightIntake.setPower(0);
+        setIntake(0);
     }
 
     /** SET PIVOT POSES */
     public void setPivot(double pos) {
         pivotServo.setPosition(getPivot() + ((pos * 10) / 360));
+    }
+    public void setTarget(double target) {
+        target = Range.clip(target, 75, 300);
+        target = target / 360;
+
+        pivotServo.setPosition(target);
     }
     public void pivotMove() {
         pivotServo.setPosition(pivotPositions.MAX_DOWN.position);
@@ -117,7 +129,7 @@ public class activeIntake extends SubsystemBase {
     }
 
     public void holdOpen() {
-        double posCorrected = 120 / 360.0;
+        double posCorrected = 80 / 360.0;
         hold.setPosition(posCorrected);
     }
 

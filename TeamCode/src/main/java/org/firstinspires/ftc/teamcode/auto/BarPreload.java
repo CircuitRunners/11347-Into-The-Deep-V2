@@ -31,7 +31,7 @@ import java.util.List;
 
 @Config
 @Autonomous
-public class ArmTuner extends OpMode{
+public class BarPreload extends OpMode{
     private Follower follower;
     private Timer pathTimer;
     private ArmRot rot;
@@ -45,7 +45,7 @@ public class ArmTuner extends OpMode{
     public static int rotTarget = 0;
 
     //EXTENSION
-    public static int fullExtend = 0;
+    public static int fullExtend = 0, barExtend = 0, barScore = 0;
     public static int fullRetract = 0;
     public static int retTarget = 0;
 
@@ -55,9 +55,10 @@ public class ArmTuner extends OpMode{
 
     private final Pose startPose = new Pose(8.8,113.5, Math.toRadians(0));
     private final Pose preloadBasked = new Pose(18, 126, Math.toRadians(315)); // 315
-    private final Pose preloadSub = new Pose(34, 83, Math.toRadians(0));
+    private final Pose preloadSub = new Pose(32, 83, Math.toRadians(0));
+    private final Pose sub = new Pose(37, 83, Math.toRadians(0));
 
-    private PathChain toBucket, toSubPre, rerun;
+    private PathChain toBucket, toSubPre, scoreSub;
 
     private Telemetry telem;
 
@@ -70,14 +71,15 @@ public class ArmTuner extends OpMode{
         toSubPre = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(startPose), new Point(preloadSub)))
                 .setLinearHeadingInterpolation(startPose.getHeading(), preloadSub.getHeading())
+                .addPath(new BezierLine(new Point(preloadSub), new Point(sub)))
+                .setLinearHeadingInterpolation(preloadSub.getHeading(), sub.getHeading())
                 .build();
 
-
-
-        rerun = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(preloadBasked), new Point(startPose)))
-                .setLinearHeadingInterpolation(preloadBasked.getHeading(), startPose.getHeading())
+        scoreSub = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(sub), new Point(preloadSub)))
+                .setLinearHeadingInterpolation(sub.getHeading(), preloadSub.getHeading())
                 .build();
+
     }
 
     public void autonomousPathUpdate() {
@@ -86,19 +88,19 @@ public class ArmTuner extends OpMode{
                 if (!follower.isBusy()) {
                     intake.setTarget(MOVE);
                     rot.setTarget(drive);
-                    ret.setTarget(fullExtend);
+                    ret.setTarget(barExtend);
                     setPathState(0);
                 }
                 break;
             case 0:
                 if (!follower.isBusy()) {
-                    follower.followPath(toBucket, false);
+                    follower.followPath(toSubPre, false);
                     setPathState(1);
                 }
                 break;
             case 1:
                 if (!follower.isBusy()) {
-                    rot.setTarget(HIGH);
+//                    rot.setTarget(HIGH);
                     setPathState(-2);
                 }
                 break;
@@ -111,13 +113,20 @@ public class ArmTuner extends OpMode{
             case 2:
                 intake.setTarget(SCORE);
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
-                    intakePower = 0.7;
+                    ret.setTarget(barScore);
                     setPathState(3);
                 }
                 break;
             case 3:
                 if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2.25) {
-                    intakePower = 0.0;
+                    follower.followPath(scoreSub, false);
+                    intake.holdOpen();
+                    setPathState(4);
+                }
+                break;
+            case 4:
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2.5) {
+                    intake.holdOpen();
                 }
                 break;
             default:
@@ -153,19 +162,22 @@ public class ArmTuner extends OpMode{
         rightIntake = hardwareMap.get(CRServo.class, RIGHT_INTAKE);
 
         // ROTATION
-        drive = 1500;
-        HIGH = 8000;
+        drive = 4500;
+        HIGH = 7700;
 
         // EXTENSION
         fullExtend = 57000;
+        barExtend = 7500;
+        barScore = 300;
         fullRetract = 0;
 
         // INTAKE
-        MOVE = 300;
-        SCORE = 75;
+        MOVE = 300; //330
+        SCORE = 65; //75
         intakePower = 0.0;
 
         intake.setTarget(MOVE);
+        intake.holdClosed();
 
         buildPaths();
 

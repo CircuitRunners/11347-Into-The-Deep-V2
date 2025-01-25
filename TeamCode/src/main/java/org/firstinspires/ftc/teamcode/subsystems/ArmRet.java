@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.subsystems;
 
-import static org.firstinspires.ftc.teamcode.support.Constants.*;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.config.Config;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
@@ -15,11 +13,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 @Config
 public class ArmRet {
     public enum ArmRetractions {
-        DRIVE(300),
-        GRAB(150),
-        REST(500),
-        MID(2000),
-        MAX(-57000);
+        REST(300),
+        MID(30000),
+        MAX(57000);
 
         public int position;
 
@@ -33,12 +29,12 @@ public class ArmRet {
     }
 
     private PIDController controller;
-    public static double p = 0.0015, i = 0, d = 0.00015;
-    public static double f = 0.17;
+    public static double p = 0.001, i = 0, d = 0;
+    public static double f = 0;
 
     public static int target = 0;
 
-    private DcMotorEx armMotor1, armMotor2;
+    private DcMotorEx armMotor3, armMotor4;
 
     public Telemetry telemetry;
 
@@ -48,33 +44,33 @@ public class ArmRet {
         controller = new PIDController(p, i, d);
         this.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        armMotor1 = hardwareMap.get(DcMotorEx.class, RETRACTION_ONE);
-        armMotor2 = hardwareMap.get(DcMotorEx.class, RETRACTION_TWO);
+        armMotor3 = hardwareMap.get(DcMotorEx.class, "leftRetraction");
+        armMotor4 = hardwareMap.get(DcMotorEx.class, "rightRetraction");
 
-        armMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public void update() {
         if (!manual) {
             controller.setPID(p, i, d);
-            int armPos = armMotor2.getCurrentPosition();
+            int armPos = armMotor4.getCurrentPosition();
             double pid = controller.calculate(armPos, target);
 
             double ff = Math.cos(Math.toRadians(target)) * f;
 
             double power = pid + ff;
 
-            armMotor1.setPower(power);
-            armMotor2.setPower(power);
+            armMotor3.setPower(-power);
+            armMotor4.setPower(-power);
 
-            telemetry.addData("ROT POS: ", armPos);
-            telemetry.addData("ROT TARGET: ", target);
+            telemetry.addData("RET POS: ", armPos);
+            telemetry.addData("RET TARGET: ", target);
             telemetry.update();
         }
     }
 
-    public int getCurrentRotation() {
-        return armMotor2.getCurrentPosition();
+    public int getCurrentRetraction() {
+        return armMotor4.getCurrentPosition();
     }
 
     public int getTarget() {
@@ -82,7 +78,7 @@ public class ArmRet {
     }
 
     public void setTarget(int target) {
-        ArmRot.target = target;
+        ArmRet.target = target;
         manual = false;
     }
 
@@ -90,15 +86,15 @@ public class ArmRet {
         n = n;
         manual = true;
 
-        armMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        armMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armMotor3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        armMotor4.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        armMotor1.setPower(n);
-        armMotor2.setPower(n);
+        armMotor3.setPower(n);
+        armMotor4.setPower(n);
     }
 
     public void reset() {
-        armMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         target = 0;
     }
 }

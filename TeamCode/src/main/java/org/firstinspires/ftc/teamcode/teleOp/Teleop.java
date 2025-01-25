@@ -35,7 +35,7 @@ public class Teleop extends CommandOpMode {
     public int retractionTarget = 0;
     public int rotationTarget = 300;
 
-    public static int FULL = 570000, MIN = 300;
+    public static int target = 0, MIN = 0;
     public static int testMult = 105;
 
     GamepadEx driver, manipulator;
@@ -65,8 +65,8 @@ public class Teleop extends CommandOpMode {
     @Override
     public void run() {
         super.run();
-        arm.update();
-        ret.update();
+//        arm.update();
+//        ret.update();
 
         double forward = -driver.getLeftY();
         double strafe  =  -driver.getLeftX();
@@ -83,27 +83,28 @@ public class Teleop extends CommandOpMode {
             pinpoint.recalibrateIMU();
         }
 
-        // RETRACTION
-        if (gamepad2.square) {
-            retractionTarget = Arm.ArmRetractions.MID.getPosition();
-        }
-        if (gamepad2.circle) {
-            retractionTarget = Arm.ArmRetractions.REST.getPosition();
-        }
-
-
-        // ROTATION
-//        if (gamepad2.dpad_up) {
-//            rotationTarget = Arm.ArmRotations.MAX.getPosition();
+//        // RETRACTION
+//        if (gamepad2.square) {
+//            retractionTarget = Arm.ArmRetractions.MID.getPosition();
 //        }
-        if (gamepad2.dpad_left) {
-            ret.setTarget(FULL);
-        }
-        if (gamepad2.dpad_down) {
-            ret.setTarget(MIN);
-        }
+//        if (gamepad2.circle) {
+//            retractionTarget = Arm.ArmRetractions.REST.getPosition();
+//        }
+//
+//
+//        // ROTATION
+////        if (gamepad2.dpad_up) {
+////            rotationTarget = Arm.ArmRotations.MAX.getPosition();
+////        }
+//        if (gamepad2.dpad_left) {
+//            target = -57000;
+//        }
+//        if (gamepad2.dpad_down) {
+//            target = -300;
+//        }
 
-        ret.manual(gamepad2.left_stick_y);
+//        ret.setTarget(target);
+//        ret.manual(gamepad2.left_stick_y);
 
 //        if (gamepad2.left_stick_x > 0.3 || gamepad2.left_stick_x < 0.3) {
 //            rotationTarget += ((int) gamepad2.left_stick_x) * testMult;
