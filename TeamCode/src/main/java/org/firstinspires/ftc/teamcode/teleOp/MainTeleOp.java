@@ -8,6 +8,7 @@ import com.arcrobotics.ftclib.command.CommandOpMode;
 import com.arcrobotics.ftclib.command.InstantCommand;
 import com.arcrobotics.ftclib.command.SequentialCommandGroup;
 import com.arcrobotics.ftclib.command.WaitCommand;
+import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -58,6 +59,9 @@ public class MainTeleOp extends CommandOpMode {
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         configurePinpoint();
 
+
+
+        /** AUTOMATIONS */
         // TOP BUCKET
         manipulator.getGamepadButton(GamepadKeys.Button.DPAD_UP)
                 .whenPressed(new SequentialCommandGroup(
@@ -69,8 +73,9 @@ public class MainTeleOp extends CommandOpMode {
                             rotTarget = 1500;
                             retTarget = 57000;
                         }),
+                        new WaitCommand(2000), // Waits 2 seconds
                         new InstantCommand(() -> rotTarget = 8000),
-                        new WaitCommand(2), // Waits for 2 seconds
+                        new WaitCommand(500),
                         new InstantCommand(() -> intake.setTarget(75))
                 ))
                 .whenReleased(new InstantCommand(() -> {
@@ -89,7 +94,7 @@ public class MainTeleOp extends CommandOpMode {
                                     intake.setTarget(300);
                                     retTarget = 300;
                                 }),
-                                new WaitCommand(1),
+                                new WaitCommand(1000), // Waits 1 second
                                 new InstantCommand(() -> rotTarget = 1500)
                         ))
                         .whenReleased(new InstantCommand(() -> {
@@ -101,15 +106,18 @@ public class MainTeleOp extends CommandOpMode {
         // GRAB
         manipulator.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
                         .whenPressed(new SequentialCommandGroup(
+                                new InstantCommand(() -> intake.setTarget(85)),
+                                new WaitCommand(1000),
                                 new InstantCommand(() -> {
                                     pidActive = true;
                                     atRest = false;
                                     isExtended = true;
-                                    rotTarget = 1000;
+                                    intake.setTarget(85);
+                                    rotTarget = 700;
                                     retTarget = 57000;
                                 }),
-                                new WaitCommand(2),
-                                new InstantCommand(() -> intake.setTarget(100))
+                                new WaitCommand(2000), // Waits 2 seconds
+                                new InstantCommand(() -> intake.setTarget(150))
                         ))
                         .whenReleased(new InstantCommand(() -> {
                             pidActive = false;
@@ -124,11 +132,12 @@ public class MainTeleOp extends CommandOpMode {
                                     pidActive = true;
                                     atRest = false;
                                     isExtended = true;
-                                    intake.setTarget(300);
-                                    rotTarget = 4500;
-                                    retTarget = 7500;
+                                    intake.setTarget(200);
+                                    rotTarget = 4300;
+                                    retTarget = 10000;
                                 }),
-                                new WaitCommand(3),
+                                new WaitCommand(3000), // Waits 3 seconds
+                                new InstantCommand(() -> intake.setTarget(85)),
                                 new InstantCommand(() -> retTarget = 300)
                         ))
                         .whenReleased(new InstantCommand(() -> {
@@ -139,6 +148,59 @@ public class MainTeleOp extends CommandOpMode {
 
 
 
+        /** ARM MANUAL STUFF */
+        // MANUAL ROTATION
+        new Trigger(() -> manipulator.getLeftX() > 0.1 || manipulator.getLeftX() < -0.1)
+                .whenActive(new InstantCommand(() -> {
+                    rot.manual(manipulator.getLeftX());
+                }));
+
+        // MANUAL RETRACTION
+        new Trigger(() -> manipulator.getLeftY() > 0.1 || manipulator.getLeftY() < -0.1)
+                .whenActive(new InstantCommand(() -> {
+                    ret.manual(manipulator.getLeftY());
+                }));
+
+
+        /** INTAKE STUFF -- RELEASE LEFT, GRAB RIGHT */
+        // HOLD CLOSED
+        manipulator.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+                .whenPressed(new InstantCommand(() -> {
+                    intake.holdClosed();
+                }));
+
+        // HOLD OPEN
+        manipulator.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
+                .whenPressed(new InstantCommand(() -> {
+                    intake.holdOpen();
+                }));
+
+        // INTAKE/OUTTAKE
+        new Trigger(() -> manipulator.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.1 ||
+                manipulator.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.1)
+                .whileActiveContinuous(new InstantCommand(() -> {
+                    double leftTrigger = manipulator.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER);
+                    double rightTrigger = manipulator.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER);
+
+                    // Update intake power based on triggers
+                    intake.intake(rightTrigger - leftTrigger);
+                }))
+                .whenInactive(new InstantCommand(() -> {
+                    // Stop the intake when neither trigger is pressed
+                    intake.intake(0);
+                }));
+
+
+        // PIVOT ROTATE
+        new Trigger(() -> Math.abs(manipulator.getRightY()) > 0.2) // Dead zone check
+                .whileActiveContinuous(new InstantCommand(() -> {
+                    // Dynamically update pivot rotation based on joystick value
+                    intake.setPivot(manipulator.getRightY());
+                }))
+                .whenInactive(new InstantCommand(() -> {
+                    // Stop pivot rotation when joystick is released
+                    intake.setPivot(0);
+                }));
 
 
 
@@ -164,7 +226,7 @@ public class MainTeleOp extends CommandOpMode {
         Pose2D currentPose;
 
         if (slow) {
-            currentPose = driveFieldRelative(forward * 0.1, strafe * 0.1, rotate * 0.1);
+            currentPose = driveFieldRelative(forward * 0.5, strafe * 0.5, rotate * 0.5);
         } else {
             currentPose = driveFieldRelative(forward, strafe, rotate);
         }
@@ -179,13 +241,8 @@ public class MainTeleOp extends CommandOpMode {
             pinpoint.recalibrateIMU();
         }
 
-
-
-
-
-
-
-
+//        intake.intake(manipulator.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - manipulator.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
+//        intake.setPivot(manipulator.getRightY());
 
 
 
@@ -198,6 +255,7 @@ public class MainTeleOp extends CommandOpMode {
         );
 
 
+        telemetry.addData("Battery Voltage", hardwareMap.voltageSensor.iterator().next().getVoltage());
         telemetry.addData("Current Retraction", ret.getCurrentRetraction());
         telemetry.addData("Target Retraction", ret.getTarget());
         telemetry.addData("Current Rotation", rot.getCurrentRotation());

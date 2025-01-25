@@ -67,9 +67,9 @@ public class ArmRot {
             armMotor1.setPower(-power);
             armMotor2.setPower(-power);
 
-            telemetry.addData("ROT POS: ", armPos);
-            telemetry.addData("ROT TARGET: ", target);
-            telemetry.update();
+//            telemetry.addData("ROT POS: ", armPos);
+//            telemetry.addData("ROT TARGET: ", target);
+//            telemetry.update();
         }
     }
 

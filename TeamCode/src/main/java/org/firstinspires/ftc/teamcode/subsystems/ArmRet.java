@@ -63,9 +63,9 @@ public class ArmRet {
             armMotor3.setPower(-power);
             armMotor4.setPower(-power);
 
-            telemetry.addData("RET POS: ", armPos);
-            telemetry.addData("RET TARGET: ", target);
-            telemetry.update();
+//            telemetry.addData("RET POS: ", armPos);
+//            telemetry.addData("RET TARGET: ", target);
+//            telemetry.update();
         }
     }
 

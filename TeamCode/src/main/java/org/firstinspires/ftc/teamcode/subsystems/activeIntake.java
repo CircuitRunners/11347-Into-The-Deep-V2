@@ -99,6 +99,7 @@ public class activeIntake extends SubsystemBase {
 
     /** SET PIVOT POSES */
     public void setPivot(double pos) {
+        pos = Range.clip(pos, 75, 300);
         pivotServo.setPosition(getPivot() + ((pos * 10) / 360));
     }
     public void setTarget(double target) {
