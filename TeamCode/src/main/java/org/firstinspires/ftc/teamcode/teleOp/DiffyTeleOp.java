@@ -26,8 +26,8 @@ import org.firstinspires.ftc.teamcode.subsystems.activeIntake;
 import java.util.Locale;
 
 @Config
-@TeleOp(name="RunThisOne", group=".")
-public class MainTeleOp extends CommandOpMode {
+@TeleOp(name="RunThisOneDiffy", group=".")
+public class DiffyTeleOp extends CommandOpMode {
     private MecanumDrive drive;
     private ArmRot rot;
     private ArmRet ret;
@@ -86,64 +86,65 @@ public class MainTeleOp extends CommandOpMode {
 
         // REST
         manipulator.getGamepadButton(GamepadKeys.Button.DPAD_DOWN)
-                        .whenPressed(new SequentialCommandGroup(
-                                new InstantCommand(() -> {
-                                    pidActive = true;
-                                    atRest = false;
-                                    isExtended = true;
-                                    intake.setTarget(300);
-                                    retTarget = 300;
-                                }),
-                                new WaitCommand(1000), // Waits 1 second
-                                new InstantCommand(() -> rotTarget = 1500)
-                        ))
-                        .whenReleased(new InstantCommand(() -> {
-                            pidActive = false;
-                            atRest = true;
-                            isExtended = false;
-                        }));
+                .whenPressed(new SequentialCommandGroup(
+                        new InstantCommand(() -> {
+                            pidActive = true;
+                            atRest = false;
+                            isExtended = true;
+                            intake.setTarget(300);
+                            retTarget = 300;
+                        }),
+                        new WaitCommand(1000), // Waits 1 second
+                        new InstantCommand(() -> rotTarget = 1500)
+                ))
+                .whenReleased(new InstantCommand(() -> {
+                    pidActive = false;
+                    atRest = true;
+                    isExtended = false;
+                }));
 
         // GRAB
         manipulator.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
-                        .whenPressed(new SequentialCommandGroup(
-                                new InstantCommand(() -> intake.setTarget(85)),
-                                new WaitCommand(1000),
-                                new InstantCommand(() -> {
-                                    pidActive = true;
-                                    atRest = false;
-                                    isExtended = true;
-                                    rotTarget = 900;
-                                    retTarget = 57000;
-                                }),
-                                new WaitCommand(2000) // Waits 2 seconds
-//                                new InstantCommand(() -> intake.setTarget(135))
-                        ))
-                        .whenReleased(new InstantCommand(() -> {
-                            pidActive = false;
+                .whenPressed(new SequentialCommandGroup(
+                        new InstantCommand(() -> intake.setTarget(85)),
+                        new WaitCommand(1000),
+                        new InstantCommand(() -> {
+                            pidActive = true;
                             atRest = false;
                             isExtended = true;
-                        }));
+                            intake.setTarget(85);
+                            rotTarget = 700;
+                            retTarget = 57000;
+                        }),
+                        new WaitCommand(2000), // Waits 2 seconds
+                        new InstantCommand(() -> intake.setTarget(145))
+                ))
+                .whenReleased(new InstantCommand(() -> {
+                    pidActive = false;
+                    atRest = false;
+                    isExtended = true;
+                }));
 
         // TOP BAR
         manipulator.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT)
-                        .whenPressed(new SequentialCommandGroup(
-                                new InstantCommand(() -> {
-                                    pidActive = true;
-                                    atRest = false;
-                                    isExtended = true;
-                                    intake.setTarget(200);
-                                    rotTarget = 4500;
-                                    retTarget = 7700;
-                                }),
-                                new WaitCommand(3000), // Waits 3 seconds
-                                new InstantCommand(() -> intake.setTarget(65)),
-                                new InstantCommand(() -> retTarget = 300)
-                        ))
-                        .whenReleased(new InstantCommand(() -> {
-                            pidActive = false;
+                .whenPressed(new SequentialCommandGroup(
+                        new InstantCommand(() -> {
+                            pidActive = true;
                             atRest = false;
                             isExtended = true;
-                        }));
+                            intake.setTarget(200);
+                            rotTarget = 4500;
+                            retTarget = 7700;
+                        }),
+                        new WaitCommand(3000), // Waits 3 seconds
+                        new InstantCommand(() -> intake.setTarget(65)),
+                        new InstantCommand(() -> retTarget = 300)
+                ))
+                .whenReleased(new InstantCommand(() -> {
+                    pidActive = false;
+                    atRest = false;
+                    isExtended = true;
+                }));
 
 
 
@@ -165,10 +166,10 @@ public class MainTeleOp extends CommandOpMode {
                 }));
 
         manipulator.getGamepadButton(GamepadKeys.Button.X)
-                        .whenPressed(new InstantCommand(() -> {
-                            rot.reset();
-                            ret.reset();
-                        }));
+                .whenPressed(new InstantCommand(() -> {
+                    rot.reset();
+                    ret.reset();
+                }));
 
 
         /** INTAKE STUFF -- RELEASE LEFT, GRAB RIGHT */
@@ -233,9 +234,15 @@ public class MainTeleOp extends CommandOpMode {
         double strafe = driver.getLeftX();
         double rotate = driver.getRightX();
 
+        boolean slow = gamepad1.square;
         Pose2D currentPose;
 
-        currentPose = driveFieldRelative(forward, strafe, rotate);
+        if (slow) {
+            currentPose = driveFieldRelative(forward * 0.5, strafe * 0.5, rotate * 0.5);
+        } else {
+            currentPose = driveFieldRelative(forward, strafe, rotate);
+        }
+
 
 
         if (gamepad1.circle && gamepad1.right_bumper) {

@@ -95,6 +95,6 @@ public class ArmRet {
 
     public void reset() {
         armMotor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        target = 0;
+        setTarget(0);
     }
 }

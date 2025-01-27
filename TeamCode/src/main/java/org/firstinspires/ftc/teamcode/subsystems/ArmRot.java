@@ -33,7 +33,7 @@ public class ArmRot {
     }
 
     private PIDController controller;
-    public static double p = 0.0015, i = 0, d = 0.00015;
+    public static double p = 0.0022, i = 0, d = 0.00015;
     public static double f = 0.17;
 
     public static int target = 0;
@@ -99,6 +99,6 @@ public class ArmRot {
 
     public void reset() {
         armMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        target = 0;
+        setTarget(0);
     }
 }

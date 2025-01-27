@@ -31,7 +31,7 @@ import java.util.List;
 
 @Config
 @Autonomous
-public class BarPlusBasket extends OpMode{
+public class HighBarRight extends OpMode {
     private Follower follower;
     private Timer pathTimer;
     private ArmRot rot;
@@ -41,26 +41,33 @@ public class BarPlusBasket extends OpMode{
     private int pathState = 0;
 
     // ROTATION
-    public static int drive = 0, HIGH = 0, grab = 0;
+    public static int drive = 0, HIGH = 0;
+    public static int rotTarget = 0;
 
     //EXTENSION
-    public static int fullExtend = 0, barExtend = 0, barScore = 0, block1 = 0;
+    public static int fullExtend = 0, barExtend = 0, barScore = 0;
     public static int fullRetract = 0;
+    public static int retTarget = 0;
 
     // INTAKE
-    public static int SCORE = 0, MOVE = 0, ACTUAL = 0;
+    public static int SCORE = 0, MOVE = 0;
     public static double intakePower = 0.0;
 
-    private final Pose startPose = new Pose(8.8,113.5, Math.toRadians(0));
-    private final Pose preloadBasked = new Pose(18, 126, Math.toRadians(360)); // 345
-    private final Pose preloadSub = new Pose(30, 83, Math.toRadians(0));
-    private final Pose sub = new Pose(37, 83, Math.toRadians(0));
+    private final Pose startPose = new Pose(135,79, Math.toRadians(0));
+    private final Pose preloadBasked = new Pose(18, 126, Math.toRadians(315)); // 315
+    private final Pose preloadSub = new Pose(101, 78, Math.toRadians(0));
+    private final Pose sub = new Pose(107, 78, Math.toRadians(0));
 
     private PathChain toBucket, toSubPre, scoreSub;
 
     private Telemetry telem;
 
     public void buildPaths() {
+        toBucket = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(startPose), new Point(preloadBasked)))
+                .setLinearHeadingInterpolation(startPose.getHeading(), preloadBasked.getHeading())
+                .build();
+
         toSubPre = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(startPose), new Point(preloadSub)))
                 .setLinearHeadingInterpolation(startPose.getHeading(), preloadSub.getHeading())
@@ -71,12 +78,6 @@ public class BarPlusBasket extends OpMode{
         scoreSub = follower.pathBuilder()
                 .addPath(new BezierLine(new Point(sub), new Point(preloadSub)))
                 .setLinearHeadingInterpolation(sub.getHeading(), preloadSub.getHeading())
-                .addPath(new BezierLine(new Point(preloadSub), new Point(preloadBasked)))
-                .setLinearHeadingInterpolation(preloadSub.getHeading(), preloadBasked.getHeading())
-                .build();
-
-        toBucket = follower.pathBuilder()
-
                 .build();
 
     }
@@ -124,35 +125,8 @@ public class BarPlusBasket extends OpMode{
                 }
                 break;
             case 4:
-                if (!follower.isBusy()) {
-//                    follower.followPath(toBucket, false);
-//                    setPathState(5);
-                }
-                break;
-            case 5:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 4) {
-                    intake.setTarget(SCORE);
-                    rot.setTarget(grab);
-                    setPathState(6);
-                }
-                break;
-            case 6:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 4.25) {
-                    ret.setTarget(fullExtend);
-                    intake.setTarget(ACTUAL);
-                    setPathState(7);
-                }
-                break;
-            case 7:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 4.5) {
-                    intakePower = -0.7;
-                    setPathState(8);
-                }
-                break;
-            case 8:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 5) {
-                    intakePower = 0.0;
-                    setPathState(9);
+                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2.5) {
+                    intake.holdOpen();
                 }
                 break;
             default:
@@ -190,19 +164,16 @@ public class BarPlusBasket extends OpMode{
         // ROTATION
         drive = 4500;
         HIGH = 7700;
-        grab = 700;
 
         // EXTENSION
         fullExtend = 57000;
         barExtend = 7500;
         barScore = 300;
-        block1 = 20000;
         fullRetract = 0;
 
         // INTAKE
-        MOVE = 330;
-        SCORE = 85;
-        ACTUAL = 150;
+        MOVE = 300; //330
+        SCORE = 65; //75
         intakePower = 0.0;
 
         intake.setTarget(MOVE);

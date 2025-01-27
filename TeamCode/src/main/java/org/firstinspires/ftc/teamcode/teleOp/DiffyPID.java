@@ -9,9 +9,8 @@ import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 
-import org.firstinspires.ftc.teamcode.subsystems.Claw;
 
-public class DiffyPIDTest extends OpMode {
+public class DiffyPID extends OpMode {
 
     private PIDController controller;
     public static double p =0, i=0, d=0;
