@@ -25,7 +25,7 @@ public class DiffyPID extends OpMode {
 //    private final double ticks_in_degree = 700 / 100.0;
     CRServo leftDiffyServo, rightDiffyServo;
 
-    //AnalogInput leftAxonEncoder, rightAxonEncoder;
+    AnalogInput leftAxonEncoder, rightAxonEncoder;
 
     public void init() {
         controller = new PIDController(p, i, d);
