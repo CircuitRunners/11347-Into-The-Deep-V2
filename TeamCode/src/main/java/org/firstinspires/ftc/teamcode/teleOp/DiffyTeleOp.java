@@ -21,7 +21,7 @@ import org.firstinspires.ftc.teamcode.auto.BulkCacheCommand;
 import org.firstinspires.ftc.teamcode.subsystems.ArmRet;
 import org.firstinspires.ftc.teamcode.subsystems.ArmRot;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
-import org.firstinspires.ftc.teamcode.subsystems.activeIntake;
+import org.firstinspires.ftc.teamcode.subsystems.Diffy;
 
 import java.util.Locale;
 
@@ -31,7 +31,7 @@ public class DiffyTeleOp extends CommandOpMode {
     private MecanumDrive drive;
     private ArmRot rot;
     private ArmRet ret;
-    private activeIntake intake;
+    private Diffy diffy;
     private GoBildaPinpointDriver pinpoint;
     private boolean isExtended = false, atRest = false, pidActive = false;
 
@@ -54,7 +54,7 @@ public class DiffyTeleOp extends CommandOpMode {
         rotTarget = 0;
         retTarget = 0;
 
-        intake = new activeIntake(hardwareMap);
+        diffy = new Diffy(hardwareMap);
 
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         configurePinpoint();
@@ -69,14 +69,14 @@ public class DiffyTeleOp extends CommandOpMode {
                             pidActive = true;
                             atRest = false;
                             isExtended = true;
-                            intake.setTarget(300);
+                            //intake.setTarget(300);
                             rotTarget = 1500;
                             retTarget = 57000;
                         }),
                         new WaitCommand(2000), // Waits 2 seconds
                         new InstantCommand(() -> rotTarget = 8000),
-                        new WaitCommand(500),
-                        new InstantCommand(() -> intake.setTarget(75))
+                        new WaitCommand(500)
+                        //new InstantCommand(() -> diffy.setTarget(75))
                 ))
                 .whenReleased(new InstantCommand(() -> {
                     pidActive = false;
@@ -91,7 +91,7 @@ public class DiffyTeleOp extends CommandOpMode {
                             pidActive = true;
                             atRest = false;
                             isExtended = true;
-                            intake.setTarget(300);
+                            //intake.setTarget(300);
                             retTarget = 300;
                         }),
                         new WaitCommand(1000), // Waits 1 second
@@ -106,18 +106,18 @@ public class DiffyTeleOp extends CommandOpMode {
         // GRAB
         manipulator.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
                 .whenPressed(new SequentialCommandGroup(
-                        new InstantCommand(() -> intake.setTarget(85)),
+                        //new InstantCommand(() -> intake.setTarget(85)),
                         new WaitCommand(1000),
                         new InstantCommand(() -> {
                             pidActive = true;
                             atRest = false;
                             isExtended = true;
-                            intake.setTarget(85);
+                            //intake.setTarget(85);
                             rotTarget = 700;
                             retTarget = 57000;
                         }),
-                        new WaitCommand(2000), // Waits 2 seconds
-                        new InstantCommand(() -> intake.setTarget(145))
+                        new WaitCommand(2000) // Waits 2 seconds
+                        //new InstantCommand(() -> intake.setTarget(145))
                 ))
                 .whenReleased(new InstantCommand(() -> {
                     pidActive = false;
@@ -132,12 +132,12 @@ public class DiffyTeleOp extends CommandOpMode {
                             pidActive = true;
                             atRest = false;
                             isExtended = true;
-                            intake.setTarget(200);
+                            //intake.setTarget(200);
                             rotTarget = 4500;
                             retTarget = 7700;
                         }),
                         new WaitCommand(3000), // Waits 3 seconds
-                        new InstantCommand(() -> intake.setTarget(65)),
+                        //new InstantCommand(() -> intake.setTarget(65)),
                         new InstantCommand(() -> retTarget = 300)
                 ))
                 .whenReleased(new InstantCommand(() -> {
@@ -176,13 +176,13 @@ public class DiffyTeleOp extends CommandOpMode {
         // HOLD CLOSED
         manipulator.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
                 .whenPressed(new InstantCommand(() -> {
-                    intake.holdClosed();
+                    //intake.holdClosed();
                 }));
 
         // HOLD OPEN
         manipulator.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .whenPressed(new InstantCommand(() -> {
-                    intake.holdOpen();
+                    //intake.holdOpen();
                 }));
 
         // INTAKE/OUTTAKE
@@ -193,11 +193,11 @@ public class DiffyTeleOp extends CommandOpMode {
                     double rightTrigger = manipulator.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER);
 
                     // Update intake power based on triggers
-                    intake.intake(rightTrigger - leftTrigger);
+                    //intake.intake(rightTrigger - leftTrigger);
                 }))
                 .whenInactive(new InstantCommand(() -> {
                     // Stop the intake when neither trigger is pressed
-                    intake.intake(0);
+                    //intake.intake(0);
                 }));
 
 
@@ -207,11 +207,11 @@ public class DiffyTeleOp extends CommandOpMode {
                     // Dynamically update pivot rotation based on joystick value
                     double power = manipulator.getRightY();
 
-                    intake.setPivot(power);
+                    //intake.setPivot(power);
                 }))
                 .whenInactive(new InstantCommand(() -> {
                     // Stop pivot rotation when joystick is released
-                    intake.setPivot(0);
+                    //intake.setPivot(0);
                 }));
 
 

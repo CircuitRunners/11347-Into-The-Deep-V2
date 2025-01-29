@@ -26,7 +26,7 @@ import org.firstinspires.ftc.teamcode.subsystems.activeIntake;
 import java.util.Locale;
 
 @Config
-@TeleOp(name="RunThisOne", group=".")
+@TeleOp(name="MainTeleOp", group=".")
 public class MainTeleOp extends CommandOpMode {
     private MecanumDrive drive;
     private ArmRot rot;
