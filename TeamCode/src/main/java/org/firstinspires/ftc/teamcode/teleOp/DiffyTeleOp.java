@@ -58,11 +58,42 @@ public class DiffyTeleOp extends CommandOpMode {
 
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         configurePinpoint();
+          boolean leftBumperJustPressed =
+                (currentGamepad1.left_bumper && !previousGamepad1.left_bumper);
+        boolean rightBumperJustPressed =
+                (currentGamepad1.right_bumper && !previousGamepad1.right_bumper);
+
+        boolean leftTriggerJustPressed =
+                (currentGamepad1.left_trigger > 0.5f) && (previousGamepad1.left_trigger <= 0.5f);
+        boolean rightTriggerJustPressed =
+                (currentGamepad1.right_trigger > 0.5f) && (previousGamepad1.right_trigger <= 0.5f);
 
 
 
         /** AUTOMATIONS */
+        if (leftBumperJustPressed) {
+            intakeState = (intakeState + 1) % 4; // cycle 0..3
+        }
+        if (leftBumperJustPressed && !previousButtonState) {
+            changeIntake();
+        }
+        previousButtonState = currentButtonState;
 
+        // if (leftTriggerJustPressed) {
+        //     intakeState = (intakeState - 1) % 4; // cycle 0..3
+        // }
+          if (leftTriggerJustPressed) {
+            claw.open();
+        }
+        // if (rightBumperJustPressed) {
+        //     depositState = (depositState + 1) % 5; // cycle 0..4
+        // }
+        // if (rightTriggerJustPressed) {
+        //     depositState = 0; // cycle 0..4
+        // }
+        if (rightTriggerJustPressed) {
+            claw.close();
+        }
 
 
 
@@ -138,7 +169,57 @@ public class DiffyTeleOp extends CommandOpMode {
                 GoBildaPinpointDriver.EncoderDirection.FORWARD
         );
     }
+  public void toggleDiffyPosition() {
+        if (toggleDirectionForward) {
+            switch (currentState) {
+                case 0:
+                    rotTarget = 900;
+                    retTarget = 57000;
 
+                    diffy.centerDiffy();
+                    currentState = 1;
+                    break;
+
+                case 1:
+                    retTarget = 300;
+                    diffy.subDiffy();
+                    new WaitCommand(1000), // Waits 1 second
+                    new InstantCommand(() -> rotTarget = 1500)
+                    currentState = 0;
+                    
+                    toggleDirectionForward = false;
+                    break;
+//                case START:
+//                    diffy.startDiffy();
+//                    currentState = Diffy.ServoStates.CENTER;
+//                    break;
+//
+//                case CENTER:
+//                    diffy.centerDiffy();
+//                    currentState = Diffy.ServoStates.END;
+//                    break;
+//
+//                case END:
+//                    diffy.endDiffy();
+//                    currentState = Diffy.ServoStates.CENTER;
+//                    toggleDirectionForward = false;
+//                    break;
+            }
+        } else {
+            switch (currentState) {
+                case 0:
+                    rotTarget = 900;
+                    retTarget = 57000;
+
+                    diffy.centerDiffy();
+                    currentState = 1;
+                    toggleDirectionForward = true;
+                    break;
+            }
+        }
+
+    }
+}
     private Pose2D driveFieldRelative(double forward, double right, double rotate) {
         pinpoint.update();
         Pose2D pos = pinpoint.getPosition();  // Current position
