@@ -22,6 +22,7 @@ import org.firstinspires.ftc.teamcode.subsystems.ArmRet;
 import org.firstinspires.ftc.teamcode.subsystems.ArmRot;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 import org.firstinspires.ftc.teamcode.subsystems.Diffy;
+import org.firstinspires.ftc.teamcode.subsystems.Claw;
 
 import java.util.Locale;
 
@@ -30,8 +31,10 @@ import java.util.Locale;
 public class DiffyTeleOp extends CommandOpMode {
     private MecanumDrive drive;
     private ArmRot rot;
+    private boolean fish = false;
     private ArmRet ret;
-    private int currentState = -1;
+    private Claw claw;
+    private int positionPosition = -1;
     private Diffy diffy;
     private GoBildaPinpointDriver pinpoint;
     private boolean isExtended = false, atRest = false, pidActive = false;
@@ -56,7 +59,7 @@ public class DiffyTeleOp extends CommandOpMode {
         ret = new ArmRet(hardwareMap, telemetry);
         rotTarget = 0;
         retTarget = 0;
-
+        claw = new Claw(hardwareMap);
         diffy = new Diffy(hardwareMap);
 
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
@@ -70,6 +73,20 @@ public class DiffyTeleOp extends CommandOpMode {
 //                (currentGamepad1.left_trigger > 0.5f) && (previousGamepad1.left_trigger <= 0.5f);
 //        boolean rightTriggerJustPressed =
 //                (currentGamepad1.right_trigger > 0.5f) && (previousGamepad1.right_trigger <= 0.5f);
+//        driver.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
+//                .whenPressed(new SequentialCommandGroup(
+//                        new InstantCommand(() -> diffy.centerDiffy()),
+//                                new InstantCommand(() -> {
+//                                    fish = true;
+//                                })
+//                        ));
+        driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
+                .whenPressed(new InstantCommand(() -> {
+                    diffy.centerDiffy();
+                    fish = true;
+                    claw.open();
+                }));
+
 
 
 
@@ -130,9 +147,11 @@ public class DiffyTeleOp extends CommandOpMode {
 
 
 
-        if (gamepad1.circle && gamepad1.right_bumper) {
-            pinpoint.resetPosAndIMU();
-        }
+//        if (gamepad1.circle && gamepad1.right_bumper) {
+//            pinpoint.resetPosAndIMU();
+//            diffy.centerDiffy();
+//        }
+
 
         if (gamepad1.triangle && gamepad1.right_bumper) {
             pinpoint.recalibrateIMU();
@@ -155,6 +174,7 @@ public class DiffyTeleOp extends CommandOpMode {
         telemetry.addData("Battery Voltage", hardwareMap.voltageSensor.iterator().next().getVoltage());
         telemetry.addData("Current Retraction", ret.getCurrentRetraction());
         telemetry.addData("Target Retraction", ret.getTarget());
+        telemetry.addData("krish = ", fish);
         telemetry.addData("Current Rotation", rot.getCurrentRotation());
         telemetry.addData("Target Rotation", rot.getTarget());
         telemetry.addData("Position", data);
@@ -175,13 +195,13 @@ public class DiffyTeleOp extends CommandOpMode {
     }
   public void changeIntake() {
         if (IntakeBoolean) {
-            switch (currentState) {
+            switch (positionPosition) {
                 case 0:
                     rotTarget = 900;
                     retTarget = 57000;
 
                     diffy.centerDiffy();
-                    currentState = 1;
+                    positionPosition = 1;
                     break;
 
                 case 1:
@@ -189,20 +209,20 @@ public class DiffyTeleOp extends CommandOpMode {
                     diffy.subDiffy();
                     //if
                     // chage: new InstantCommand(() -> rotTarget = 1500);
-                    currentState = 0;
+                    positionPosition = 0;
                     
                     IntakeBoolean = false;
                     break;
 
             }
         } else {
-            switch (currentState) {
+            switch (positionPosition) {
                 case 0:
                     rotTarget = 900;
                     retTarget = 57000;
 
                     diffy.centerDiffy();
-                    currentState = 1;
+                    positionPosition = 1;
                     IntakeBoolean = true;
                     break;
             }
