@@ -13,12 +13,12 @@ public class Diffy extends SubsystemBase {
     private Servo leftDiffyServo, rightDiffyServo;
     private ServoStates currentState;
     private final ElapsedTime switchTimer = new ElapsedTime();
-    public enum ServoStates {
+    public static enum ServoStates {
         CENTER(0.50, 0.50),
         START(0.92, 0.885),
         END(0.2, 0.18),
         SPECIMEN(0.68,0.67),
-        SUB(0.76, 0.78);
+        SUB(0.7, 0.3);
 
 
         private final double positionL, positionR;
