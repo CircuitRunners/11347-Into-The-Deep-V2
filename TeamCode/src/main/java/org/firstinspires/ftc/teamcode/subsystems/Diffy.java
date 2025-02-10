@@ -16,7 +16,7 @@ public class Diffy extends SubsystemBase {
     public static enum ServoStates {
         CENTER(0.50, 0.50),
         START(0.92, 0.885),
-        END(0.2, 0.18),
+        END(0.4, 0.6),
         SPECIMEN(0.68,0.67),
         SUB(0.7, 0.3);
 

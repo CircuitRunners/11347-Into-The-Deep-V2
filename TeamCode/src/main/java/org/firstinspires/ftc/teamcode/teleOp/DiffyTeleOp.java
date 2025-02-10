@@ -12,6 +12,8 @@ import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcontroller.internal.GoBildaPinpointDriver;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -32,10 +34,29 @@ public class DiffyTeleOp extends CommandOpMode {
     private MecanumDrive drive;
     private ArmRot rot;
     private boolean fish = false;
+    private boolean krish = false;
     private ArmRet ret;
+
+    double leftStickYVal;
+    double leftStickXVal;
+    double rightStickXVal;
+    double rightStickYVal;
+
+
+    double frontLeftSpeed;
+    double frontRightSpeed;
+    double rearLeftSpeed;
+    double rearRightSpeed;
+
+    public double speedMultiply = 1;
+
+    private double powerThreshold = 0;
     private Claw claw;
     private int positionPosition = -1;
+    private int positionPositionPosition = -1;
     private Diffy diffy;
+    private ElapsedTime intakeTimer = new ElapsedTime();
+    private ElapsedTime outtakeTimer = new ElapsedTime();
     private GoBildaPinpointDriver pinpoint;
     private boolean isExtended = false, atRest = false, pidActive = false;
 
@@ -64,22 +85,6 @@ public class DiffyTeleOp extends CommandOpMode {
 
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "odo");
         configurePinpoint();
-//          boolean leftBumperJustPressed =
-//                (currentGamepad1.left_bumper && !previousGamepad1.left_bumper);
-//        boolean rightBumperJustPressed =
-//                (currentGamepad1.right_bumper && !previousGamepad1.right_bumper);
-//
-//        boolean leftTriggerJustPressed =
-//                (currentGamepad1.left_trigger > 0.5f) && (previousGamepad1.left_trigger <= 0.5f);
-//        boolean rightTriggerJustPressed =
-//                (currentGamepad1.right_trigger > 0.5f) && (previousGamepad1.right_trigger <= 0.5f);
-//        driver.getGamepadButton(GamepadKeys.Button.DPAD_LEFT)
-//                .whenPressed(new SequentialCommandGroup(
-//                        new InstantCommand(() -> diffy.centerDiffy()),
-//                                new InstantCommand(() -> {
-//                                    fish = true;
-//                                })
-//                        ));
 //        driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
 //                .whenPressed(new InstantCommand(() -> {
 //                    diffy.subDiffy();
@@ -89,8 +94,22 @@ public class DiffyTeleOp extends CommandOpMode {
 
         driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .whenPressed(new InstantCommand(() -> {
-                    changeIntake();
+                    positionPosition = (positionPosition + 1) % 4;
+                    krish = true;
                 }));
+        driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+                .whenPressed(new InstantCommand(() -> {
+                    positionPositionPosition = (positionPositionPosition + 1) % 5;
+                }));
+        driver.getGamepadButton(GamepadKeys.Button.X)
+                .whenPressed(new InstantCommand(() -> {
+                    claw.open();
+                }));
+        driver.getGamepadButton(GamepadKeys.Button.A)
+                .whenPressed(new InstantCommand(() -> {
+                    claw.close();
+                }));
+
 //        driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
 //                .whenPressed(new InstantCommand(() -> {
 //                    diffy.subDiffy();
@@ -114,8 +133,8 @@ public class DiffyTeleOp extends CommandOpMode {
         // if (leftTriggerJustPressed) {
         //     intakeState = (intakeState - 1) % 4; // cycle 0..3
         // }
-          if (gamepad1.left_trigger >0) {
-            //claw.open();
+          if (gamepad1.circle) {
+            claw.open();
         }
         // if (rightBumperJustPressed) {
         //     depositState = (depositState + 1) % 5; // cycle 0..4
@@ -123,9 +142,22 @@ public class DiffyTeleOp extends CommandOpMode {
         // if (rightTriggerJustPressed) {
         //     depositState = 0; // cycle 0..4
         // }
-        if (gamepad1.right_trigger >0) {
-            //claw.close();
+        if (gamepad1.square) {
+            claw.close();
         }
+
+//        new Trigger(() -> driver.getLeftY() > 0.1 || driver.getLeftY() < -0.1)
+//                .whileActiveContinuous(new InstantCommand(() -> {
+//                    double power = driver.getLeftY();
+//
+//                    ret.manual(power);
+//                }));
+//
+//        driver.getGamepadButton(GamepadKeys.Button.X)
+//                .whenPressed(new InstantCommand(() -> {
+//                    rot.reset();
+//                    ret.reset();
+//                }));
 
 
 
@@ -150,25 +182,153 @@ public class DiffyTeleOp extends CommandOpMode {
         boolean slow = gamepad1.square;
         Pose2D currentPose;
 
-        if (slow) {
-            currentPose = driveFieldRelative(forward * 0.5, strafe * 0.5, rotate * 0.5);
+
+        leftStickYVal = gamepad1.left_stick_y;
+        leftStickYVal = Range.clip(leftStickYVal, -1, 1);
+        leftStickXVal = -gamepad1.left_stick_x;
+        leftStickXVal = Range.clip(leftStickXVal, -1, 1);
+        rightStickXVal = -gamepad1.right_stick_x;
+        rightStickXVal = Range.clip(rightStickXVal, -1, 1);
+
+        frontLeftSpeed = leftStickYVal + leftStickXVal + rightStickXVal;
+        frontLeftSpeed = Range.clip(frontLeftSpeed, -1, 1);
+
+        frontRightSpeed = leftStickYVal - leftStickXVal - rightStickXVal;
+        frontRightSpeed = Range.clip(frontRightSpeed, -1, 1);
+
+        rearLeftSpeed = leftStickYVal - leftStickXVal + rightStickXVal;
+        rearLeftSpeed = Range.clip(rearLeftSpeed, -1, 1);
+
+        rearRightSpeed = leftStickYVal + leftStickXVal - rightStickXVal;
+        rearRightSpeed = Range.clip(rearRightSpeed, -1, 1);
+
+        if (frontLeftSpeed <= powerThreshold && frontLeftSpeed >= -powerThreshold) {
+            frontLeftSpeed = 0;
+            drive.frontLeftMotor.setPower(frontLeftSpeed);
         } else {
-            currentPose = driveFieldRelative(forward, strafe, rotate);
+            drive.frontLeftMotor.setPower(frontLeftSpeed * speedMultiply);
         }
 
-        while (gamepad1.dpad_up) {
+        if (frontRightSpeed <= powerThreshold && frontRightSpeed >= -powerThreshold) {
+            frontRightSpeed = 0;
+            drive.frontRightMotor.setPower(frontRightSpeed);
+        } else {
+            drive.frontRightMotor.setPower(frontRightSpeed * speedMultiply);
+        }
+
+        if (rearLeftSpeed <= powerThreshold && rearLeftSpeed >= -powerThreshold) {
+            rearLeftSpeed = 0;
+            drive.backLeftMotor.setPower(rearLeftSpeed);
+        } else {
+            drive.backLeftMotor.setPower(rearLeftSpeed * speedMultiply);
+        }
+
+        if (rearRightSpeed <= powerThreshold && rearRightSpeed >= -powerThreshold) {
+            rearRightSpeed = 0;
+            drive.backRightMotor.setPower(rearRightSpeed);
+        } else {
+            drive.backRightMotor.setPower(rearRightSpeed * speedMultiply);
+        }
+
+//        if (slow) {
+//            currentPose = driveFieldRelative(forward * 0.5, strafe * 0.5, rotate * 0.5);
+//        } else {
+//            currentPose = driveFieldRelative(forward, strafe, rotate);
+//        }
+
+        if (positionPosition !=-1 && positionPositionPosition !=-1){
+            positionPosition =-1;
+            positionPositionPosition = -1;
+        }
+        while (gamepad1.left_trigger > 0.2) {
+            ret.manual(gamepad1.left_trigger);
+        }
+        while (gamepad1.right_trigger > 0.2) {
+            ret.manual(-gamepad1.right_trigger);
+        }
+        if (gamepad1.dpad_up) {
             diffy.rotateDiffyL();
         }
-        while (gamepad1.dpad_down) {
+        if (gamepad1.dpad_down) {
             diffy.rotateDiffyR();
+        }
+        if (gamepad1.circle) {
+            claw.close();
+        }
+        if (gamepad1.square){
+            claw.open();
+        }
+        if (gamepad1.dpad_right) {
+            diffy.moveDiffyN();
+        }
+        if (gamepad1.dpad_left) {
+            diffy.moveDiffyP();
         }
 
 //        if (gamepad1.circle && gamepad1.right_bumper) {
 //            pinpoint.resetPosAndIMU();
 //            diffy.centerDiffy();
 //        }
+        switch (positionPosition) {
+//            case -1:
+//                rotTarget = 0;
+//                retTarget = 0;
+//                break;
+            case 0:
+              rotTarget = 1500; //extension = 46000
+              retTarget = 30000;
+//
+//                rotTarget = 1100;
+//                //retTarget = 57000;
+//                ret.setTarget(57000);
+//                fish = true;
+                diffy.subDiffy();
+                claw.open();
+                break;
+            case 1:
+                rotTarget = 1380;
+                fish = false;
+                break;
+            case 2:
+                claw.close();
 
+                break;
+            case 3:
+                retTarget=0;
+                rotTarget = 1500;
+                break;
+            default:
+                break;
+        }
+        switch (positionPositionPosition) {
+            case 0:
+                rotTarget = 1500;
+                diffy.centerDiffy();
 
+                break;
+
+            case 1:
+                rotTarget = 8300;
+
+                if (rot.getCurrentRotation() >1400)
+                {
+                    diffy.endDiffy();
+                    retTarget = 55000;
+                    outtakeTimer.reset();
+                }
+                break;
+            case 2:
+                claw.open();
+                break;
+            case 3:
+                retTarget = 0;
+                break;
+            case 4:
+                rotTarget = 1500;
+                break;
+            default:
+                break;
+        }
         if (gamepad1.triangle && gamepad1.right_bumper) {
             pinpoint.recalibrateIMU();
         }
@@ -177,13 +337,13 @@ public class DiffyTeleOp extends CommandOpMode {
 //        intake.setPivot(manipulator.getRightY());
 
 
-
-        String data = String.format(Locale.US,
-                "{X: %.3f, Y: %.3f, H: %.3f}",
-                currentPose.getX(DistanceUnit.INCH),
-                currentPose.getY(DistanceUnit.INCH),
-                currentPose.getHeading(AngleUnit.DEGREES)
-        );
+//
+//        String data = String.format(Locale.US,
+//                "{X: %.3f, Y: %.3f, H: %.3f}",
+//                currentPose.getX(DistanceUnit.INCH),
+//                currentPose.getY(DistanceUnit.INCH),
+//                currentPose.getHeading(AngleUnit.DEGREES)
+//        );
 
         telemetry.addData("Battery Voltage", hardwareMap.voltageSensor.iterator().next().getVoltage());
         telemetry.addData("Current Retraction", ret.getCurrentRetraction());
@@ -191,9 +351,13 @@ public class DiffyTeleOp extends CommandOpMode {
         telemetry.addData("krish = ", diffy.leftPosition());
         telemetry.addData("fishy = ", diffy.rightPosition());
         telemetry.addData("Ez", fish);
+        telemetry.addData("pz", krish);
         telemetry.addData("Current Rotation", rot.getCurrentRotation());
         telemetry.addData("Target Rotation", rot.getTarget());
-        telemetry.addData("Position", data);
+//        telemetry.addData("Position", data);
+        telemetry.addData("Positionposition", positionPosition);
+        telemetry.addData("Positionpositionposition", positionPositionPosition);
+        telemetry.addData("tenz", outtakeTimer.milliseconds());
         telemetry.addData("Status", pinpoint.getDeviceStatus());
         telemetry.addData("Pinpoint Frequency", pinpoint.getFrequency());
         telemetry.update();
@@ -209,42 +373,23 @@ public class DiffyTeleOp extends CommandOpMode {
                 GoBildaPinpointDriver.EncoderDirection.FORWARD
         );
     }
-  public void changeIntake() {
-        if (IntakeBoolean) {
-            switch (positionPosition) {
-                case 0:
-                    rotTarget = 900;
-                    //retTarget = 57000;
-                    fish = true;
-                    diffy.centerDiffy();
-                    positionPosition = 1;
-                    break;
+ // public void changeIntake() {
+        //if (IntakeBoolean) {
 
-                case 1:
-                    //retTarget = 300;
-                    diffy.subDiffy();
-                    //if
-                    // chage: new InstantCommand(() -> rotTarget = 1500);
-                    positionPosition = 0;
-                    
-                    IntakeBoolean = false;
-                    break;
+        //}
+//        else {
+//            switch (positionPosition) {
+//                case 0:
+//                    rotTarget = 900;
+//                    //retTarget = 57000;
+//
+//                    diffy.centerDiffy();
+//                    positionPosition = 1;
+//                    IntakeBoolean = true;
+//                    break;
+//            }
+//        }
 
-            }
-        } else {
-            switch (positionPosition) {
-                case 0:
-                    rotTarget = 900;
-                    //retTarget = 57000;
-
-                    diffy.centerDiffy();
-                    positionPosition = 1;
-                    IntakeBoolean = true;
-                    break;
-            }
-        }
-
-    }
 
     private Pose2D driveFieldRelative(double forward, double right, double rotate) {
         pinpoint.update();

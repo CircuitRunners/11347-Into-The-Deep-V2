@@ -7,10 +7,10 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 
 
 public class MecanumDrive {
-    private DcMotorEx frontLeftMotor;
-    private DcMotorEx frontRightMotor;
-    private DcMotorEx backLeftMotor;
-    private DcMotorEx backRightMotor;
+    public DcMotorEx frontLeftMotor;
+    public DcMotorEx frontRightMotor;
+    public DcMotorEx backLeftMotor;
+    public DcMotorEx backRightMotor;
 
     public void init(HardwareMap hardwareMap) {
         frontLeftMotor = hardwareMap.get(DcMotorEx.class, "fl");
@@ -18,8 +18,8 @@ public class MecanumDrive {
         backLeftMotor = hardwareMap.get(DcMotorEx.class, "bl");
         backRightMotor = hardwareMap.get(DcMotorEx.class, "br");
 
-        frontLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
-        backLeftMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
 
         DcMotorEx[] motors = new DcMotorEx[]{
                 frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor

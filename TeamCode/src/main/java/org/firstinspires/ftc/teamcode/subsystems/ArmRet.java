@@ -47,13 +47,13 @@ public class ArmRet {
         armMotor3 = hardwareMap.get(DcMotorEx.class, "leftRetraction");
         armMotor4 = hardwareMap.get(DcMotorEx.class, "rightRetraction");
 
-        armMotor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
     }
 
     public void update() {
         if (!manual) {
             controller.setPID(p, i, d);
-            int armPos = armMotor4.getCurrentPosition();
+            int armPos = armMotor3.getCurrentPosition();
             double pid = controller.calculate(armPos, target);
 
             double ff = Math.cos(Math.toRadians(target)) * f;
@@ -70,7 +70,7 @@ public class ArmRet {
     }
 
     public int getCurrentRetraction() {
-        return armMotor4.getCurrentPosition();
+        return armMotor3.getCurrentPosition();
     }
 
     public int getTarget() {
@@ -94,7 +94,7 @@ public class ArmRet {
     }
 
     public void reset() {
-        armMotor4.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         setTarget(0);
     }
 }
