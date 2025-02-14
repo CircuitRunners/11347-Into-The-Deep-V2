@@ -6,31 +6,25 @@ import static org.firstinspires.ftc.teamcode.support.Constants.pinpointYOffset;
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.CommandOpMode;
 import com.arcrobotics.ftclib.command.InstantCommand;
-import com.arcrobotics.ftclib.command.SequentialCommandGroup;
-import com.arcrobotics.ftclib.command.WaitCommand;
-import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.Range;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcontroller.internal.GoBildaPinpointDriver;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.auto.BulkCacheCommand;
 import org.firstinspires.ftc.teamcode.subsystems.ArmRet;
 import org.firstinspires.ftc.teamcode.subsystems.ArmRot;
-import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
-import org.firstinspires.ftc.teamcode.subsystems.Diffy;
 import org.firstinspires.ftc.teamcode.subsystems.Claw;
-
-import java.util.Locale;
+import org.firstinspires.ftc.teamcode.subsystems.Diffy;
+import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
 
 @Config
-@TeleOp(name="RunThisOneDiffy", group=".")
-public class DiffyTeleOp extends CommandOpMode {
+@TeleOp(name="forkids", group=".")
+public class littlekidteleop extends CommandOpMode {
     private MecanumDrive drive;
     private ArmRot rot;
     private boolean fish = false;
@@ -64,6 +58,7 @@ public class DiffyTeleOp extends CommandOpMode {
     private boolean previousLeftBumperState = false;
     private boolean IntakeBoolean = true;
     GamepadEx driver;//, previousGamepad1;
+    GamepadEx manipulator;
 
     @Override
     public void initialize() {
@@ -74,6 +69,7 @@ public class DiffyTeleOp extends CommandOpMode {
 
         // SUBSYSTEMS
         drive = new MecanumDrive();
+        manipulator = new GamepadEx(gamepad2);
         drive.init(hardwareMap);
 
         rot = new ArmRot(hardwareMap, telemetry);
@@ -92,20 +88,20 @@ public class DiffyTeleOp extends CommandOpMode {
 //                    claw.open();
 //                }));
 
-        driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
+        manipulator.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .whenPressed(new InstantCommand(() -> {
                     positionPosition = (positionPosition + 1) % 5;
                     krish = true;
                 }));
-        driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
+        manipulator.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
                 .whenPressed(new InstantCommand(() -> {
                     positionPositionPosition = (positionPositionPosition + 1) % 5;
                 }));
-        driver.getGamepadButton(GamepadKeys.Button.X)
+        manipulator.getGamepadButton(GamepadKeys.Button.X)
                 .whenPressed(new InstantCommand(() -> {
                     claw.open();
                 }));
-        driver.getGamepadButton(GamepadKeys.Button.A)
+        manipulator.getGamepadButton(GamepadKeys.Button.A)
                 .whenPressed(new InstantCommand(() -> {
                     claw.close();
                 }));
@@ -145,21 +141,13 @@ public class DiffyTeleOp extends CommandOpMode {
         if (gamepad1.square) {
             claw.close();
         }
-        driver.getGamepadButton(GamepadKeys.Button.X)
-                .whenPressed(new InstantCommand(() -> {
-                    claw.open();
-                }));driver.getGamepadButton(GamepadKeys.Button.A)
-                .whenPressed(new InstantCommand(() -> {
-                    claw.close();
-                }));
-        new Trigger(() -> driver.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.1 || driver.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) < -0.1)
-                .whileActiveContinuous(new InstantCommand(() -> {
-                    rotTarget= rotTarget +10;
-                }));
-        new Trigger(() -> driver.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.1 || driver.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) < -0.1)
-                .whileActiveContinuous(new InstantCommand(() -> {
-                    rotTarget= rotTarget -10;
-                }));
+
+//        new Trigger(() -> driver.getLeftY() > 0.1 || driver.getLeftY() < -0.1)
+//                .whileActiveContinuous(new InstantCommand(() -> {
+//                    double power = driver.getLeftY();
+//
+//                    ret.manual(power);
+//                }));
 //
 //        driver.getGamepadButton(GamepadKeys.Button.X)
 //                .whenPressed(new InstantCommand(() -> {
@@ -248,28 +236,24 @@ public class DiffyTeleOp extends CommandOpMode {
             positionPosition =-1;
             positionPositionPosition = -1;
         }
-        while (gamepad1.left_trigger > 0.2) {
-            ret.manual(gamepad1.left_trigger);
+        if (gamepad2.left_trigger > 0.2) {
+            //rot.manual(gamepad2.left_trigger);
+            rotTarget= rotTarget+10;
         }
-        while (gamepad1.right_trigger > 0.2) {
-            ret.manual(-gamepad1.right_trigger);
+        if (gamepad2.right_trigger > 0.2) {
+            //rot.manual(-gamepad2.right_trigger);
+            rotTarget = rotTarget-10;
         }
-        if (gamepad1.dpad_up) {
+        if (gamepad2.dpad_up) {
             diffy.rotateDiffyL();
         }
-        if (gamepad1.dpad_down) {
+        if (gamepad2.dpad_down) {
             diffy.rotateDiffyR();
         }
-        if (gamepad1.circle) {
-            claw.close();
-        }
-        if (gamepad1.square){
-            claw.open();
-        }
-        if (gamepad1.dpad_right) {
+        if (gamepad2.dpad_right) {
             diffy.moveDiffyN();
         }
-        if (gamepad1.dpad_left) {
+        if (gamepad2.dpad_left) {
             diffy.moveDiffyP();
         }
 
@@ -409,7 +393,7 @@ public class DiffyTeleOp extends CommandOpMode {
         double robotAngle = Math.toRadians(pos.getHeading(AngleUnit.DEGREES));
         double theta = Math.atan2(forward, right);
         double r = Math.hypot(forward, right);
-        theta = org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
+        theta = AngleUnit
                 .normalizeRadians(theta - robotAngle);
 
         double newForward = r * Math.sin(theta);

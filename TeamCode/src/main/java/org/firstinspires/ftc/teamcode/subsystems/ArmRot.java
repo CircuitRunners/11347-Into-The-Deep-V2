@@ -96,7 +96,6 @@ public class ArmRot {
         armMotor1.setPower(n);
         armMotor2.setPower(n);
     }
-
     public void reset() {
         armMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         setTarget(0);
