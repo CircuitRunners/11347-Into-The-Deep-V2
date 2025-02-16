@@ -105,6 +105,14 @@ public class littlekidteleop extends CommandOpMode {
                 .whenPressed(new InstantCommand(() -> {
                     claw.close();
                 }));
+        manipulator.getGamepadButton(GamepadKeys.Button.B)
+                .whenPressed(new InstantCommand(() -> {
+                    diffy.subDiffy();;
+                }));
+        manipulator.getGamepadButton(GamepadKeys.Button.Y)
+                .whenPressed(new InstantCommand(() -> {
+                    diffy.centerDiffy();;
+                }));
 
 //        driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
 //                .whenPressed(new InstantCommand(() -> {
