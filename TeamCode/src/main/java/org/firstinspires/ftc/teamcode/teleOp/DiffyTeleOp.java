@@ -54,7 +54,7 @@ public class DiffyTeleOp extends CommandOpMode {
 
     private double powerThreshold = 0;
     private Claw claw;
-    private int positionPosition = -2;
+    private int positionPosition = -3;
     private int positionPositionPosition = -1;
     private Diffy diffy;
     private ElapsedTime intakeTimer = new ElapsedTime();
@@ -272,15 +272,13 @@ public class DiffyTeleOp extends CommandOpMode {
 //            diffy.centerDiffy();
 //        }
         switch (positionPosition) {
-//            case -1:
-//                rotTarget = 0;
-//                retTarget = 0;
-//                break;
-            case -1:
+
+            case -2:
                 if (rotTarget !=1500){
                     rotTarget = 1500;
                     diffy.subDiffy();
                     claw.open();
+                    positionPosition = positionPosition+1;
                 }
                 break;
             case 0:
@@ -310,6 +308,7 @@ public class DiffyTeleOp extends CommandOpMode {
                         retTarget = 0;
                         rotTarget = 1500;
                         diffy.centerDiffy();
+                        positionPosition = -1;
                     }
                 }
                 break;
@@ -320,6 +319,7 @@ public class DiffyTeleOp extends CommandOpMode {
             case 0:
                 if (retTarget <1000) {
                     rotTarget = 8300;
+                    diffy.endDiffy();
                 }
                 break;
 
@@ -329,7 +329,7 @@ public class DiffyTeleOp extends CommandOpMode {
                 if (retTarget < 10000)
                 {
 
-                    diffy.endDiffy();
+
                     retTarget = 20000;
 
 
@@ -337,16 +337,21 @@ public class DiffyTeleOp extends CommandOpMode {
                 pathTimer.resetTimer();
                 break;
             case 2:
-                if (retTarget >1600) {
+                if (retTarget >10000) {
                     claw.open();
                     if (pathTimer.getElapsedTimeSeconds() > 0.5) {
                         retTarget = 0;
-                        if (ret.getCurrentRetraction() < 5000) {
-                            rotTarget = 1500;
-                            diffy.centerDiffy();
+
                         }
                     }
+                if (rotTarget >5000){
+                    if (pathTimer.getElapsedTimeSeconds() > 0.95) {
+                        rotTarget = 1500;
+                        diffy.centerDiffy();
+                        positionPositionPosition=-1;
+                    }
                 }
+
                 break;
 //            case 3:
 //
