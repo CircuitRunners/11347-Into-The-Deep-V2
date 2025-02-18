@@ -109,10 +109,19 @@ public class DiffyTeleOp extends CommandOpMode {
                 .whenPressed(new InstantCommand(() -> {
                     claw.open();
                 }));
-        driver.getGamepadButton(GamepadKeys.Button.A)
+        driver.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(new InstantCommand(() -> {
                     claw.close();
                 }));
+        
+//        driver.getGamepadButton(GamepadKeys.Button.Y)
+//                .whenPressed(new InstantCommand(() -> {
+//                    retTarget = retTarget +500;
+//                }));
+//        driver.getGamepadButton(GamepadKeys.Button.A)
+//                .whenPressed(new InstantCommand(() -> {
+//                    retTarget = retTarget -500;
+//                }));
 
 //        driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
 //                .whenPressed(new InstantCommand(() -> {
@@ -148,11 +157,11 @@ public class DiffyTeleOp extends CommandOpMode {
         // }
         new Trigger(() -> driver.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.1)
                 .whileActiveContinuous(new InstantCommand(() -> {
-                    rotTarget= rotTarget +10;
+                    rotTarget= rotTarget -20;
                 }));
         new Trigger(() -> driver.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.1)
                 .whileActiveContinuous(new InstantCommand(() -> {
-                    rotTarget= rotTarget -10;
+                    rotTarget= rotTarget +20;
                 }));
 //
 //        driver.getGamepadButton(GamepadKeys.Button.X)
@@ -294,16 +303,17 @@ public class DiffyTeleOp extends CommandOpMode {
                     diffy.subDiffy();
                     claw.open();
                 }
+                pathTimer.resetTimer();
                 break;
             case 1:
                 if (rotTarget >1350) {
                     rotTarget = 1300;
+
                 }
-                pathTimer.resetTimer();
-                break;
-            case 2:
-                claw.close();
-                if (pathTimer.getElapsedTimeSeconds() >0.5){
+                if (pathTimer.getElapsedTimeSeconds() > 0.2) {
+                    claw.close();
+                }
+                if (pathTimer.getElapsedTimeSeconds() >0.4){
                     if (retTarget >1400) {
                         retTarget = 0;
                         rotTarget = 1500;
@@ -312,6 +322,9 @@ public class DiffyTeleOp extends CommandOpMode {
                     }
                 }
                 break;
+//            case 2:
+//
+//                break;
             default:
                 break;
         }
