@@ -114,14 +114,17 @@ public class DiffyTeleOp extends CommandOpMode {
                     claw.close();
                 }));
         
-//        driver.getGamepadButton(GamepadKeys.Button.Y)
-//                .whenPressed(new InstantCommand(() -> {
+        driver.getGamepadButton(GamepadKeys.Button.Y)
+                .whenPressed(new InstantCommand(() -> {
 //                    retTarget = retTarget +500;
-//                }));
-//        driver.getGamepadButton(GamepadKeys.Button.A)
-//                .whenPressed(new InstantCommand(() -> {
-//                    retTarget = retTarget -500;
-//                }));
+                    ret.reset();
+                    retTarget = 0;
+                }));
+        driver.getGamepadButton(GamepadKeys.Button.A)
+                .whileActiveContinuous(new InstantCommand(() -> {
+                    retTarget = retTarget -500;
+                }));
+
 
 //        driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
 //                .whenPressed(new InstantCommand(() -> {
@@ -179,7 +182,6 @@ public class DiffyTeleOp extends CommandOpMode {
     @Override
     public void run() {
         super.run();
-
         rot.update();
         ret.update();
 
@@ -293,7 +295,7 @@ public class DiffyTeleOp extends CommandOpMode {
             case 0:
                 //phase = 0;
                 if (retTarget <500) {
-                    rotTarget = 1500; //extension = 46000
+                    rotTarget = 1550; //extension = 46000
                     retTarget = 30000;
 //
 //                rotTarget = 1100;
@@ -332,7 +334,7 @@ public class DiffyTeleOp extends CommandOpMode {
             case 0:
                 if (retTarget <1000) {
                     rotTarget = 8300;
-                    diffy.endDiffy();
+                    diffy.centerDiffy();
                 }
                 break;
 
@@ -343,7 +345,7 @@ public class DiffyTeleOp extends CommandOpMode {
                 {
 
 
-                    retTarget = 20000;
+                    retTarget = 65000;
 
 
                 }
@@ -351,16 +353,17 @@ public class DiffyTeleOp extends CommandOpMode {
                 break;
             case 2:
                 if (retTarget >10000) {
+                    diffy.endDiffy();
                     claw.open();
-                    if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    if (pathTimer.getElapsedTimeSeconds() > 0.4) {
                         retTarget = 0;
-
+                        diffy.centerDiffy();
                         }
                     }
                 if (rotTarget >5000){
-                    if (pathTimer.getElapsedTimeSeconds() > 0.95) {
+                    if (pathTimer.getElapsedTimeSeconds() > 1.5) {
                         rotTarget = 1500;
-                        diffy.centerDiffy();
+
                         positionPositionPosition=-1;
                     }
                 }
