@@ -6,6 +6,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -44,10 +45,19 @@ public class ArmRet {
         controller = new PIDController(p, i, d);
         this.telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        armMotor3 = hardwareMap.get(DcMotorEx.class, "leftRetraction");
+        armMotor3 = hardwareMap.get(DcMotorEx.class, "leftRetraction");//left
         armMotor4 = hardwareMap.get(DcMotorEx.class, "rightRetraction");
 
+        armMotor4.setDirection(DcMotorSimple.Direction.FORWARD);
+        armMotor3.setDirection(DcMotorSimple.Direction.FORWARD);
         armMotor3.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor3.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armMotor4.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        armMotor3.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        armMotor4.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
+
     }
 
     public void update() {
@@ -60,8 +70,9 @@ public class ArmRet {
 
             double power = pid + ff;
 
-            armMotor3.setPower(-power);
+            armMotor3.setPower(power);
             armMotor4.setPower(-power);
+            telemetry.addData("FISHING FISHING", power);
 
 //            telemetry.addData("RET POS: ", armPos);
 //            telemetry.addData("RET TARGET: ", target);

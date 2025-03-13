@@ -6,27 +6,36 @@ import static org.firstinspires.ftc.teamcode.support.Constants.pinpointYOffset;
 import com.acmerobotics.dashboard.config.Config;
 import com.arcrobotics.ftclib.command.CommandOpMode;
 import com.arcrobotics.ftclib.command.InstantCommand;
+import com.arcrobotics.ftclib.command.SequentialCommandGroup;
+import com.arcrobotics.ftclib.command.WaitCommand;
+import com.arcrobotics.ftclib.command.button.Trigger;
 import com.arcrobotics.ftclib.gamepad.GamepadEx;
 import com.arcrobotics.ftclib.gamepad.GamepadKeys;
+import com.pedropathing.util.Timer;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.util.ElapsedTime;
 import com.qualcomm.robotcore.util.Range;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcontroller.internal.GoBildaPinpointDriver;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 import org.firstinspires.ftc.teamcode.auto.BulkCacheCommand;
 import org.firstinspires.ftc.teamcode.subsystems.ArmRet;
 import org.firstinspires.ftc.teamcode.subsystems.ArmRot;
-import org.firstinspires.ftc.teamcode.subsystems.Claw;
-import org.firstinspires.ftc.teamcode.subsystems.Diffy;
+import org.firstinspires.ftc.teamcode.subsystems.FieldCentricDrive;
 import org.firstinspires.ftc.teamcode.subsystems.MecanumDrive;
+import org.firstinspires.ftc.teamcode.subsystems.Diffy;
+import org.firstinspires.ftc.teamcode.subsystems.Claw;
+
+import java.util.Locale;
 
 @Config
-@TeleOp(name="forkids", group=".")
+@TeleOp(name="for kids", group=".")
 public class littlekidteleop extends CommandOpMode {
-    private MecanumDrive drive;
+    private FieldCentricDrive drive;
     private ArmRot rot;
+    private Timer pathTimer;
     private boolean fish = false;
     private boolean krish = false;
     private ArmRet ret;
@@ -46,7 +55,7 @@ public class littlekidteleop extends CommandOpMode {
 
     private double powerThreshold = 0;
     private Claw claw;
-    private int positionPosition = -1;
+    private int positionPosition = -3;
     private int positionPositionPosition = -1;
     private Diffy diffy;
     private ElapsedTime intakeTimer = new ElapsedTime();
@@ -57,20 +66,20 @@ public class littlekidteleop extends CommandOpMode {
     public static int rotTarget = 0, retTarget = 0;
     private boolean previousLeftBumperState = false;
     private boolean IntakeBoolean = true;
-    GamepadEx driver;//, previousGamepad1;
-    GamepadEx manipulator;
+    GamepadEx driver, manipulator;//, previousGamepad1;
 
     @Override
     public void initialize() {
         schedule(new BulkCacheCommand(hardwareMap));
         driver = new GamepadEx(gamepad1);
 //        driver = new GamepadEx(gamepad1);
-//        manipulator = new GamepadEx(gamepad2);
+        manipulator = new GamepadEx(gamepad2);
+
+        pathTimer = new Timer();
 
         // SUBSYSTEMS
-        drive = new MecanumDrive();
-        manipulator = new GamepadEx(gamepad2);
-        drive.init(hardwareMap);
+        drive = new FieldCentricDrive(hardwareMap);
+        //drive.init(hardwareMap);
 
         rot = new ArmRot(hardwareMap, telemetry);
         ret = new ArmRet(hardwareMap, telemetry);
@@ -90,28 +99,35 @@ public class littlekidteleop extends CommandOpMode {
 
         manipulator.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER)
                 .whenPressed(new InstantCommand(() -> {
-                    positionPosition = (positionPosition + 1) % 5;
+                    positionPosition = (positionPosition + 1) % 3;
                     krish = true;
                 }));
         manipulator.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
                 .whenPressed(new InstantCommand(() -> {
-                    positionPositionPosition = (positionPositionPosition + 1) % 5;
+                    positionPositionPosition = (positionPositionPosition + 1) % 3;
                 }));
         manipulator.getGamepadButton(GamepadKeys.Button.X)
                 .whenPressed(new InstantCommand(() -> {
                     claw.open();
                 }));
-        manipulator.getGamepadButton(GamepadKeys.Button.A)
+        manipulator.getGamepadButton(GamepadKeys.Button.B)
                 .whenPressed(new InstantCommand(() -> {
                     claw.close();
                 }));
-        manipulator.getGamepadButton(GamepadKeys.Button.B)
-                .whenPressed(new InstantCommand(() -> {
-                    diffy.subDiffy();;
-                }));
+
         manipulator.getGamepadButton(GamepadKeys.Button.Y)
                 .whenPressed(new InstantCommand(() -> {
-                    diffy.centerDiffy();;
+//                    retTarget = retTarget +500;
+                    ret.reset();
+                    retTarget = 0;
+                }));
+        manipulator.getGamepadButton(GamepadKeys.Button.A)
+                .whileActiveContinuous(new InstantCommand(() -> {
+                    retTarget = retTarget -500;
+                }));
+        new Trigger(() -> manipulator.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.1)
+                .whileActiveContinuous(new InstantCommand(() -> {
+                    rotTarget= rotTarget -20;
                 }));
 
 //        driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER)
@@ -137,7 +153,7 @@ public class littlekidteleop extends CommandOpMode {
         // if (leftTriggerJustPressed) {
         //     intakeState = (intakeState - 1) % 4; // cycle 0..3
         // }
-          if (gamepad1.circle) {
+        if (gamepad1.circle) {
             claw.open();
         }
         // if (rightBumperJustPressed) {
@@ -146,16 +162,14 @@ public class littlekidteleop extends CommandOpMode {
         // if (rightTriggerJustPressed) {
         //     depositState = 0; // cycle 0..4
         // }
-        if (gamepad1.square) {
-            claw.close();
-        }
-
-//        new Trigger(() -> driver.getLeftY() > 0.1 || driver.getLeftY() < -0.1)
-//                .whileActiveContinuous(new InstantCommand(() -> {
-//                    double power = driver.getLeftY();
-//
-//                    ret.manual(power);
-//                }));
+        new Trigger(() -> manipulator.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER) > 0.1)
+                .whileActiveContinuous(new InstantCommand(() -> {
+                    rotTarget= rotTarget -20;
+                }));
+        new Trigger(() -> manipulator.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) > 0.1)
+                .whileActiveContinuous(new InstantCommand(() -> {
+                    rotTarget= rotTarget +20;
+                }));
 //
 //        driver.getGamepadButton(GamepadKeys.Button.X)
 //                .whenPressed(new InstantCommand(() -> {
@@ -172,7 +186,6 @@ public class littlekidteleop extends CommandOpMode {
     @Override
     public void run() {
         super.run();
-
         rot.update();
         ret.update();
 
@@ -187,52 +200,53 @@ public class littlekidteleop extends CommandOpMode {
         Pose2D currentPose;
 
 
-        leftStickYVal = gamepad1.left_stick_y;
-        leftStickYVal = Range.clip(leftStickYVal, -1, 1);
-        leftStickXVal = -gamepad1.left_stick_x;
-        leftStickXVal = Range.clip(leftStickXVal, -1, 1);
-        rightStickXVal = -gamepad1.right_stick_x;
-        rightStickXVal = Range.clip(rightStickXVal, -1, 1);
-
-        frontLeftSpeed = leftStickYVal + leftStickXVal + rightStickXVal;
-        frontLeftSpeed = Range.clip(frontLeftSpeed, -1, 1);
-
-        frontRightSpeed = leftStickYVal - leftStickXVal - rightStickXVal;
-        frontRightSpeed = Range.clip(frontRightSpeed, -1, 1);
-
-        rearLeftSpeed = leftStickYVal - leftStickXVal + rightStickXVal;
-        rearLeftSpeed = Range.clip(rearLeftSpeed, -1, 1);
-
-        rearRightSpeed = leftStickYVal + leftStickXVal - rightStickXVal;
-        rearRightSpeed = Range.clip(rearRightSpeed, -1, 1);
-
-        if (frontLeftSpeed <= powerThreshold && frontLeftSpeed >= -powerThreshold) {
-            frontLeftSpeed = 0;
-            drive.frontLeftMotor.setPower(frontLeftSpeed);
-        } else {
-            drive.frontLeftMotor.setPower(frontLeftSpeed * speedMultiply);
-        }
-
-        if (frontRightSpeed <= powerThreshold && frontRightSpeed >= -powerThreshold) {
-            frontRightSpeed = 0;
-            drive.frontRightMotor.setPower(frontRightSpeed);
-        } else {
-            drive.frontRightMotor.setPower(frontRightSpeed * speedMultiply);
-        }
-
-        if (rearLeftSpeed <= powerThreshold && rearLeftSpeed >= -powerThreshold) {
-            rearLeftSpeed = 0;
-            drive.backLeftMotor.setPower(rearLeftSpeed);
-        } else {
-            drive.backLeftMotor.setPower(rearLeftSpeed * speedMultiply);
-        }
-
-        if (rearRightSpeed <= powerThreshold && rearRightSpeed >= -powerThreshold) {
-            rearRightSpeed = 0;
-            drive.backRightMotor.setPower(rearRightSpeed);
-        } else {
-            drive.backRightMotor.setPower(rearRightSpeed * speedMultiply);
-        }
+//        leftStickYVal = gamepad1.left_stick_y;
+//        leftStickYVal = Range.clip(leftStickYVal, -1, 1);
+//        leftStickXVal = -gamepad1.left_stick_x;
+//        leftStickXVal = Range.clip(leftStickXVal, -1, 1);
+//        rightStickXVal = -gamepad1.right_stick_x;
+//        rightStickXVal = Range.clip(rightStickXVal, -1, 1);
+//
+//        frontLeftSpeed = leftStickYVal + leftStickXVal + rightStickXVal;
+//        frontLeftSpeed = Range.clip(frontLeftSpeed, -1, 1);
+//
+//        frontRightSpeed = leftStickYVal - leftStickXVal - rightStickXVal;
+//        frontRightSpeed = Range.clip(frontRightSpeed, -1, 1);
+//
+//        rearLeftSpeed = leftStickYVal - leftStickXVal + rightStickXVal;
+//        rearLeftSpeed = Range.clip(rearLeftSpeed, -1, 1);
+//
+//        rearRightSpeed = leftStickYVal + leftStickXVal - rightStickXVal;
+//        rearRightSpeed = Range.clip(rearRightSpeed, -1, 1);
+//
+//        if (frontLeftSpeed <= powerThreshold && frontLeftSpeed >= -powerThreshold) {
+//            frontLeftSpeed = 0;
+//            drive.frontLeftMotor.setPower(frontLeftSpeed);
+//        } else {
+//            drive.frontLeftMotor.setPower(frontLeftSpeed * speedMultiply);
+//        }
+//
+//        if (frontRightSpeed <= powerThreshold && frontRightSpeed >= -powerThreshold) {
+//            frontRightSpeed = 0;
+//            drive.frontRightMotor.setPower(frontRightSpeed);
+//        } else {
+//            drive.frontRightMotor.setPower(frontRightSpeed * speedMultiply);
+//        }
+//
+//        if (rearLeftSpeed <= powerThreshold && rearLeftSpeed >= -powerThreshold) {
+//            rearLeftSpeed = 0;
+//            drive.backLeftMotor.setPower(rearLeftSpeed);
+//        } else {
+//            drive.backLeftMotor.setPower(rearLeftSpeed * speedMultiply);
+//        }
+//
+//        if (rearRightSpeed <= powerThreshold && rearRightSpeed >= -powerThreshold) {
+//            rearRightSpeed = 0;
+//            drive.backRightMotor.setPower(rearRightSpeed);
+//        } else {
+//            drive.backRightMotor.setPower(rearRightSpeed * speedMultiply);
+//        }
+            drive.drive(gamepad1.left_stick_x, gamepad1.left_stick_y, gamepad1.right_stick_x);
 
 //        if (slow) {
 //            currentPose = driveFieldRelative(forward * 0.5, strafe * 0.5, rotate * 0.5);
@@ -244,25 +258,29 @@ public class littlekidteleop extends CommandOpMode {
             positionPosition =-1;
             positionPositionPosition = -1;
         }
-        if (gamepad2.left_trigger > 0.2) {
-            //rot.manual(gamepad2.left_trigger);
-            rotTarget= rotTarget+10;
-        }
-        if (gamepad2.right_trigger > 0.2) {
-            //rot.manual(-gamepad2.right_trigger);
-            rotTarget = rotTarget-10;
-        }
+//        while (gamepad1.left_trigger > 0.2) {
+//            rotTarget = rotTarget +15;
+//        }
+//        while (gamepad1.right_trigger > 0.2) {
+//            rotTarget = rotTarget - 15;
+//        }
         if (gamepad2.dpad_up) {
             diffy.rotateDiffyL();
         }
         if (gamepad2.dpad_down) {
             diffy.rotateDiffyR();
         }
+        if (gamepad2.circle) {
+            claw.close();
+        }
+        if (gamepad2.square){
+            claw.open();
+        }
         if (gamepad2.dpad_right) {
-            diffy.moveDiffyN();
+            diffy.moveDiffyP();
         }
         if (gamepad2.dpad_left) {
-            diffy.moveDiffyP();
+            diffy.moveDiffyN();
         }
 
 //        if (gamepad1.circle && gamepad1.right_bumper) {
@@ -270,65 +288,99 @@ public class littlekidteleop extends CommandOpMode {
 //            diffy.centerDiffy();
 //        }
         switch (positionPosition) {
-//            case -1:
-//                rotTarget = 0;
-//                retTarget = 0;
-//                break;
+
+            case -2:
+                if (rotTarget !=1500){
+                    rotTarget = 1500;
+                    diffy.subDiffy();
+                    claw.open();
+                    positionPosition = positionPosition+1;
+                }
+                break;
             case 0:
-              rotTarget = 1500; //extension = 46000
-              retTarget = 30000;
+                //phase = 0;
+                if (retTarget <500) {
+                    rotTarget = 1650; //extension = 46000
+                    retTarget = 30000;
 //
 //                rotTarget = 1100;
 //                //retTarget = 57000;
 //                ret.setTarget(57000);
 //                fish = true;
-                diffy.subDiffy();
-                claw.open();
+                    diffy.subDiffy();
+                    claw.open();
+                }
+                pathTimer.resetTimer();
                 break;
             case 1:
-                rotTarget = 1380;
-                fish = false;
-                break;
-            case 2:
-                rotTarget=1340;
-            case 3:
-                claw.close();
+                if (rotTarget >1350) {
+                    rotTarget = 1300;
 
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 0.2) {
+                    claw.close();
+                }
+                if (pathTimer.getElapsedTimeSeconds() >0.4){
+                    if (retTarget >1400) {
+                        retTarget = 0;
+                        rotTarget = 1500;
+                        diffy.centerDiffy();
+                        positionPosition = -1;
+                    }
+                }
                 break;
-            case 4:
-                retTarget=0;
-                rotTarget = 1500;
-                break;
+//            case 2:
+//
+//                break;
             default:
                 break;
         }
         switch (positionPositionPosition) {
             case 0:
-                rotTarget = 1500;
-                diffy.centerDiffy();
-
+                if (retTarget <1000) {
+                    rotTarget = 8300;
+                    diffy.centerDiffy();
+                }
                 break;
 
             case 1:
-                rotTarget = 8300;
 
-                if (rot.getCurrentRotation() >1400)
+
+                if (retTarget < 10000)
                 {
-                    diffy.endDiffy();
-                    retTarget = 55000;
 
-                    outtakeTimer.reset();
+
+                    retTarget = 52000;
+
+
                 }
+                pathTimer.resetTimer();
                 break;
             case 2:
-                claw.open();
-                break;
-            case 3:
-                retTarget = 0;
-                if (ret.getCurrentRetraction() < 50) {
-                    rotTarget = 1500;
+                if (retTarget >10000) {
+                    diffy.endDiffy();
+                    claw.open();
+                    if (pathTimer.getElapsedTimeSeconds() > 0.4) {
+                        retTarget = 0;
+                        diffy.centerDiffy();
+                    }
                 }
+                if (rotTarget >5000){
+                    if (pathTimer.getElapsedTimeSeconds() > 1.7) {
+                        rotTarget = 1500;
+
+                        positionPositionPosition=-1;
+                    }
+                }
+
                 break;
+//            case 3:
+//
+//                if (ret.getCurrentRetraction() < 5000) {
+//                    rotTarget = 1500;
+//                    diffy.centerDiffy();
+//                }
+//                break;
             default:
                 break;
         }
@@ -336,8 +388,6 @@ public class littlekidteleop extends CommandOpMode {
             pinpoint.recalibrateIMU();
         }
 
-//        intake.intake(manipulator.getTrigger(GamepadKeys.Trigger.RIGHT_TRIGGER) - manipulator.getTrigger(GamepadKeys.Trigger.LEFT_TRIGGER));
-//        intake.setPivot(manipulator.getRightY());
 
 
 //
@@ -376,23 +426,6 @@ public class littlekidteleop extends CommandOpMode {
                 GoBildaPinpointDriver.EncoderDirection.FORWARD
         );
     }
- // public void changeIntake() {
-        //if (IntakeBoolean) {
-
-        //}
-//        else {
-//            switch (positionPosition) {
-//                case 0:
-//                    rotTarget = 900;
-//                    //retTarget = 57000;
-//
-//                    diffy.centerDiffy();
-//                    positionPosition = 1;
-//                    IntakeBoolean = true;
-//                    break;
-//            }
-//        }
-
 
     private Pose2D driveFieldRelative(double forward, double right, double rotate) {
         pinpoint.update();
@@ -401,7 +434,7 @@ public class littlekidteleop extends CommandOpMode {
         double robotAngle = Math.toRadians(pos.getHeading(AngleUnit.DEGREES));
         double theta = Math.atan2(forward, right);
         double r = Math.hypot(forward, right);
-        theta = AngleUnit
+        theta = org.firstinspires.ftc.robotcore.external.navigation.AngleUnit
                 .normalizeRadians(theta - robotAngle);
 
         double newForward = r * Math.sin(theta);

@@ -149,9 +149,9 @@ public class DiffyTeleOp extends CommandOpMode {
         // if (leftTriggerJustPressed) {
         //     intakeState = (intakeState - 1) % 4; // cycle 0..3
         // }
-          if (gamepad1.circle) {
-            claw.open();
-        }
+//          if (gamepad1.circle) {
+//            claw.open();
+//        }
         // if (rightBumperJustPressed) {
         //     depositState = (depositState + 1) % 5; // cycle 0..4
         // }
@@ -272,10 +272,10 @@ public class DiffyTeleOp extends CommandOpMode {
             claw.open();
         }
         if (gamepad1.dpad_right) {
-            diffy.moveDiffyN();
+            diffy.moveDiffyP();
         }
         if (gamepad1.dpad_left) {
-            diffy.moveDiffyP();
+            diffy.moveDiffyN();
         }
 
 //        if (gamepad1.circle && gamepad1.right_bumper) {
@@ -295,7 +295,7 @@ public class DiffyTeleOp extends CommandOpMode {
             case 0:
                 //phase = 0;
                 if (retTarget <500) {
-                    rotTarget = 1550; //extension = 46000
+                    rotTarget = 1650; //extension = 46000
                     retTarget = 30000;
 //
 //                rotTarget = 1100;
@@ -345,7 +345,7 @@ public class DiffyTeleOp extends CommandOpMode {
                 {
 
 
-                    retTarget = 65000;
+                    retTarget = 52000;
 
 
                 }
@@ -361,7 +361,7 @@ public class DiffyTeleOp extends CommandOpMode {
                         }
                     }
                 if (rotTarget >5000){
-                    if (pathTimer.getElapsedTimeSeconds() > 1.5) {
+                    if (pathTimer.getElapsedTimeSeconds() > 1.7) {
                         rotTarget = 1500;
 
                         positionPositionPosition=-1;

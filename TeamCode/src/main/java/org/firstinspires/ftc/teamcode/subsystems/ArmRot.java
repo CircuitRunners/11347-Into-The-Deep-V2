@@ -8,6 +8,7 @@ import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.arcrobotics.ftclib.controller.PIDController;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
@@ -33,7 +34,7 @@ public class ArmRot {
     }
 
     private PIDController controller;
-    public static double p = 0.0022, i = 0, d = 0.00015;
+    public static double p = 0.0012, i = 0, d = 0.000045;//d = 0.00015; p =0.0022
     public static double f = 0.17;
 
     public static int target = 0;
@@ -51,7 +52,14 @@ public class ArmRot {
         armMotor1 = hardwareMap.get(DcMotorEx.class, ROTATION_ONE);
         armMotor2 = hardwareMap.get(DcMotorEx.class, ROTATION_TWO);
 
+        armMotor1.setDirection(DcMotorSimple.Direction.FORWARD);
+        armMotor2.setDirection(DcMotorSimple.Direction.FORWARD);
         armMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        armMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armMotor1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        armMotor1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        armMotor2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
 
     public void update() {
@@ -64,11 +72,11 @@ public class ArmRot {
 
             double power = pid + ff;
 
-            armMotor1.setPower(-power);
             armMotor2.setPower(-power);
+            armMotor1.setPower(-power);
 
 //            telemetry.addData("ROT POS: ", armPos);
-//            telemetry.addData("ROT TARGET: ", target);
+            telemetry.addData("ROT TARGET: ", power);
 //            telemetry.update();
         }
     }

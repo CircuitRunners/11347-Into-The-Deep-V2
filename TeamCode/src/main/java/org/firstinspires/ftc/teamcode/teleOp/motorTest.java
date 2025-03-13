@@ -31,12 +31,22 @@ public class motorTest extends CommandOpMode {
         controller = new PIDController(p, i, d);
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-        arm_motor = hardwareMap.get(DcMotorEx.class, RETRACTION_TWO);
-        arm_motor_2 = hardwareMap.get(DcMotorEx.class, RETRACTION_ONE);
+        arm_motor = hardwareMap.get(DcMotorEx.class, "fish");
+        arm_motor_2 = hardwareMap.get(DcMotorEx.class, "the krish");
 
-        arm_motor.setDirection(DcMotorSimple.Direction.REVERSE);
+        arm_motor.setDirection(DcMotorSimple.Direction.FORWARD);
         arm_motor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         arm_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        arm_motor.setDirection(DcMotorSimple.Direction.FORWARD);
+        arm_motor_2.setDirection(DcMotorSimple.Direction.FORWARD);
+        arm_motor_2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        arm_motor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        arm_motor_2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+        arm_motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        arm_motor_2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+
     }
 
     @Override
@@ -50,8 +60,8 @@ public class motorTest extends CommandOpMode {
 
         double power = pid + ff;
 
-        arm_motor.setPower(power);
-        arm_motor_2.setPower(power);
+        arm_motor.setPower(-power);
+        arm_motor_2.setPower(-power);
 
         telemetry.addData("pos", armPos);
         telemetry.addData("target", target);

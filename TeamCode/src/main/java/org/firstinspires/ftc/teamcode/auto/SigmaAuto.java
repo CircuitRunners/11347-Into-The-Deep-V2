@@ -51,30 +51,41 @@ public class SigmaAuto extends OpMode {
     public static double intakePower = 0.0;
 
     private final Pose startPose = new Pose(10,100, Math.toRadians(0));
-    private final Pose SampleOne = new Pose(15, 120, Math.toRadians(90)); // 315
-    private final Pose SampleTwo = new Pose(15, 128, Math.toRadians(-180));
-    private final Pose SampleThree = new Pose(15, 130, Math.toRadians(180));
+    private final Pose bucket = new Pose(18.5, 120, Math.toRadians(-45)); // 315
+    private final Pose bucket2 = new Pose(19, 121, Math.toRadians(-45));
+    private final Pose SampleOne = new Pose(28, 117, Math.toRadians(0)); // 315
+    private final Pose SampleTwo = new Pose(28,126, Math.toRadians(0));
+    private final Pose SampleThree = new Pose(30, 125, Math.toRadians(-35));
 
-    private PathChain toBucket, toSampleOne, toSampleTwo;
+    private PathChain toBucket, toSampleOne, toSampleTwo, toBucket1,toBucket2;
 
     private Telemetry telem;
 
     public void buildPaths() {
         toBucket = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(startPose), new Point(SampleOne)))
-                .setLinearHeadingInterpolation(startPose.getHeading(), SampleOne.getHeading())
+                .addPath(new BezierLine(new Point(startPose), new Point(bucket)))
+                .setLinearHeadingInterpolation(startPose.getHeading(), bucket.getHeading())
                 .build();
 
         toSampleOne= follower.pathBuilder()
-                .addPath(new BezierLine(new Point(SampleOne), new Point(SampleTwo)))
-                .setLinearHeadingInterpolation(SampleOne.getHeading(), SampleTwo.getHeading())
+                .addPath(new BezierLine(new Point(bucket), new Point(SampleOne)))
+                .setLinearHeadingInterpolation(bucket.getHeading(), SampleOne.getHeading())
 //                .addPath(new BezierLine(new Point(preloadSub), new Point(sub)))
 //                .setLinearHeadingInterpolation(preloadSub.getHeading(), sub.getHeading())
                 .build();
+        //toBucket1 =
 
         toSampleTwo = follower.pathBuilder()
-                .addPath(new BezierLine(new Point(SampleTwo), new Point(SampleThree)))
-                .setLinearHeadingInterpolation(SampleTwo.getHeading(), SampleThree.getHeading())
+                .addPath(new BezierLine(new Point(bucket), new Point(SampleTwo)))
+                .setLinearHeadingInterpolation(bucket.getHeading(), SampleTwo.getHeading())
+                .build();
+        toBucket1 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(SampleOne), new Point(bucket)))
+                .setLinearHeadingInterpolation(SampleOne.getHeading(), bucket.getHeading())
+                .build();
+        toBucket2 = follower.pathBuilder()
+                .addPath(new BezierLine(new Point(SampleTwo), new Point(bucket2)))
+                .setLinearHeadingInterpolation(SampleTwo.getHeading(), bucket2.getHeading())
                 .build();
 
     }
@@ -83,43 +94,275 @@ public class SigmaAuto extends OpMode {
         switch (pathState) {
             case -1:
                 if (!follower.isBusy()) {
-                    follower.followPath(toBucket);
-                    rot.setTarget(1380);
-                    ret.setTarget(30000);
-                    diffy.endDiffy();
-                    if (ret.getCurrentRetraction() >28000) {
-                        claw.open();
-                    }
+                    follower.followPath(toBucket); // TODO: TRY MOVING FIRST CASE
+                    //pathTimer.resetTimer();
                     setPathState(0);
+
                 }
+                pathTimer.resetTimer();
                 break;
             case 0:
                 if (!follower.isBusy()) {
-                    ret.setTarget(20);
-                    if (ret.getCurrentRetraction() < 500) {
-                        rot.setTarget(1500);
-                        follower.followPath(toSampleOne, false);
-                        setPathState(1);
+                    if (rotTarget <1000) {
+                        rot.setTarget(8300); // TODO: CHECK IF USING VARS FIXES
+                        diffy.centerDiffy();
                     }
+                    if (rot.getCurrentRotation() > 8000)
+                    {
+
+                        ret.setTarget(52000);
+                        //claw.open();
+
+
+
+                    }
+
+                    if (ret.getCurrentRetraction() > 10000) {
+                        if (pathTimer.getElapsedTimeSeconds() > 4.5) {
+                            pathTimer.resetTimer();
+                            setPathState(1);
+
+                        }
+
+                    }
+
                 }
+
                 break;
             case 1:
-                if (!follower.isBusy()) {
-//                    rot.setTarget(HIGH);
-                    //setPathState(2);
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    if (ret.getTarget() > 10000) {
+                        diffy.endDiffy();
+                        claw.open();
+                        if (pathTimer.getElapsedTimeSeconds() > 1.6) {
+                            ret.setTarget(0);
+                            diffy.centerDiffy();
+                        }
+                    }
+                    if (rot.getTarget() > 5000) {
+                        if (pathTimer.getElapsedTimeSeconds() > 2.5) {
+                            rot.setTarget(1500);
+                            pathTimer.resetTimer();
+                            setPathState(2);
+                        }
+                    }
                 }
+                //pathTimer.resetTimer();
                 break;
             case 2:
-                if (!follower.isBusy() && pathTimer.getElapsedTimeSeconds() > 2) {
-                    //ret.setTarget(barScore);
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    if (ret.getTarget() < 500) {
+//                        rotTarget = 1650; //extension = 46000
+//                        retTarget = 30000;
+//    //
+    //                rotTarget = 1100;
+    //                //retTarget = 57000;
+    //                ret.setTarget(57000);
+    //                fish = true;
+                        diffy.subDiffy();
+                        claw.open();
+
+
+                    }
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    rot.setTarget(1650);
+                    ret.setTarget(30000);
                     setPathState(3);
                 }
+
                 break;
             case 3:
+                if (!follower.isBusy()) {
+                    follower.followPath(toSampleOne);
+                    setPathState(4);
+                }
+                pathTimer.resetTimer();
 
                 break;
             case 4:
-                //
+                if (pathTimer.getElapsedTimeSeconds() > 1) {
+                    if (rot.getTarget() > 1300) {
+                        rot.setTarget(1300);
+
+                    }
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 1.7) {
+                    claw.close();
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 1.9) {
+                    if (ret.getTarget() > 1400) {
+                        ret.setTarget(0);
+                        rot.setTarget(1500);
+                        diffy.centerDiffy();
+                        setPathState(5);
+                    }
+                }
+
+
+                break;
+            case 5:
+                if (!follower.isBusy()) {
+                    follower.followPath(toBucket1); // TODO: TRY MOVING FIRST CASE
+                    //pathTimer.resetTimer();
+                    setPathState(6);
+
+                }
+                pathTimer.resetTimer();
+                break;
+            case 6:
+                if (!follower.isBusy()) {
+                    if (rotTarget <1000) {
+                        rot.setTarget(8300); // TODO: CHECK IF USING VARS FIXES
+                        diffy.centerDiffy();
+                    }
+                    if (rot.getCurrentRotation() > 8000)
+                    {
+
+                        ret.setTarget(52000);
+                        //claw.open();
+
+
+
+                    }
+
+                    if (ret.getCurrentRetraction() > 10000) {
+                        if (pathTimer.getElapsedTimeSeconds() > 4.5) {
+                            pathTimer.resetTimer();
+                            setPathState(7);
+
+                        }
+
+                    }
+
+                }
+
+                break;
+            case 7:
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    if (ret.getTarget() > 10000) {
+                        diffy.endDiffy();
+                        claw.open();
+                        if (pathTimer.getElapsedTimeSeconds() > 1.6) {
+                            ret.setTarget(0);
+                            diffy.centerDiffy();
+                        }
+                    }
+                    if (rot.getTarget() > 5000) {
+                        if (pathTimer.getElapsedTimeSeconds() > 2.5) {
+                            rot.setTarget(1500);
+                            pathTimer.resetTimer();
+                            setPathState(8);
+                        }
+                    }
+                }
+                //pathTimer.resetTimer();
+                break;
+            case 8:
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    if (ret.getTarget() < 500) {
+//                        rotTarget = 1650; //extension = 46000
+//                        retTarget = 30000;
+//    //
+                        //                rotTarget = 1100;
+                        //                //retTarget = 57000;
+                        //                ret.setTarget(57000);
+                        //                fish = true;
+                        diffy.subDiffy();
+                        claw.open();
+
+
+                    }
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 2) {
+                    rot.setTarget(1650);
+                    ret.setTarget(30000);
+                    setPathState(9);
+                }
+
+                break;
+            case 9:
+                if (!follower.isBusy()) {
+                    follower.followPath(toSampleTwo);
+                    setPathState(10);
+                }
+                pathTimer.resetTimer();
+                break;
+            case 10:
+                if (pathTimer.getElapsedTimeSeconds() > 1) {
+                    if (rot.getTarget() > 1300) {
+                        rot.setTarget(1300);
+
+                    }
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 1.7) {
+                    claw.close();
+                }
+                if (pathTimer.getElapsedTimeSeconds() > 1.9) {
+                    if (ret.getTarget() > 1400) {
+                        ret.setTarget(0);
+                        rot.setTarget(1500);
+                        diffy.centerDiffy();
+                        setPathState(11);
+                    }
+                }
+                break;
+            case 11:
+                if (!follower.isBusy()) {
+                    follower.followPath(toBucket2); // TODO: TRY MOVING FIRST CASE
+                    //pathTimer.resetTimer();
+                    setPathState(12);
+
+                }
+                pathTimer.resetTimer();
+                break;
+            case 12:
+                if (!follower.isBusy()) {
+                    if (rotTarget <1000) {
+                        rot.setTarget(8300); // TODO: CHECK IF USING VARS FIXES
+                        diffy.centerDiffy();
+                    }
+                    if (rot.getCurrentRotation() > 8000)
+                    {
+
+                        ret.setTarget(52000);
+                        //claw.open();
+
+
+
+                    }
+
+                    if (ret.getCurrentRetraction() > 10000) {
+                        if (pathTimer.getElapsedTimeSeconds() > 4.5) {
+                            pathTimer.resetTimer();
+                            setPathState(13);
+
+                        }
+
+                    }
+
+                }
+
+                break;
+            case 13:
+                if (pathTimer.getElapsedTimeSeconds() > 0.5) {
+                    if (ret.getTarget() > 10000) {
+                        diffy.endDiffy();
+                        claw.open();
+                        if (pathTimer.getElapsedTimeSeconds() > 1.6) {
+                            ret.setTarget(0);
+                            diffy.centerDiffy();
+                        }
+                    }
+                    if (rot.getTarget() > 5000) {
+                        if (pathTimer.getElapsedTimeSeconds() > 2.5) {
+                            rot.setTarget(1500);
+                            pathTimer.resetTimer();
+                            //setPathState(14);
+                        }
+                    }
+                }
+                //pathTimer.resetTimer();
                 break;
             default:
                 requestOpModeStop();
@@ -169,7 +412,8 @@ public class SigmaAuto extends OpMode {
         intakePower = 0.0;
 
 
-
+        rotTarget = 0;
+        retTarget = 0;
         buildPaths();
 
         telem = new MultipleTelemetry(this.telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -181,6 +425,8 @@ public class SigmaAuto extends OpMode {
     public void loop() {
         rot.update();
         ret.update();
+//        rot.setTarget(rotTarget);
+//        ret.setTarget(retTarget);
         follower.update();
         autonomousPathUpdate();
 
