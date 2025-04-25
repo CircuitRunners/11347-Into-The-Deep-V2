@@ -58,27 +58,28 @@ public class activeIntake extends SubsystemBase {
     }
 
     /** POWER SETTERS FOR ACTIVE INTAKE */
-    public void setIntake(double power) {
-        long currentTime = System.currentTimeMillis();
-
-        // Check if a timeout has been set or color is detected
-        if (intakeStartTime == 0) {
-            intakeStartTime = currentTime; // Start the timer
-        }
-
-        if (currentTime - intakeStartTime <= TIMEOUT_MS && !isColorDetected()) {
-            leftIntake.setPower(power);
-            rightIntake.setPower(power);
-        } else {
-            stop(); // Stop intake if time has exceeded or a color is detected
-            intakeStartTime = 0; // Reset the timer
-        }
-    }
+//    public void setIntake(double power) {
+//        long currentTime = System.currentTimeMillis();
+//
+//        // Check if a timeout has been set or color is detected
+//        if (intakeStartTime == 0) {
+//            intakeStartTime = currentTime; // Start the timer
+//        }
+//
+//        if (currentTime - intakeStartTime <= TIMEOUT_MS && !isColorDetected()) {
+//            leftIntake.setPower(power);
+//            rightIntake.setPower(power);
+//        } else {
+//            stop(); // Stop intake if time has exceeded or a color is detected
+//            intakeStartTime = 0; // Reset the timer
+//        }
+//    }
 
     public void intake(double power) {
-        power = Range.clip(power, -1, 0.7);
+        power = Range.clip(power, -0.7, 0.7);
 
-        setIntake(power); // Negative power for intake
+        leftIntake.setPower(power);
+        rightIntake.setPower(power);
     }
 
     public void in() {
@@ -94,16 +95,17 @@ public class activeIntake extends SubsystemBase {
     public void stop() {
         leftIntake.setPower(0);
         rightIntake.setPower(0);
-        setIntake(0);
+//        setIntake(0);
     }
 
     /** SET PIVOT POSES */
     public void setPivot(double pos) {
-        pivotServo.setPosition(getPivot() + ((pos * 10) / 360));
+        pos = Range.clip(pos, 75, 300);
+        pivotServo.setPosition(getPivot() + ((pos * 10.0) / 360.0));
     }
     public void setTarget(double target) {
         target = Range.clip(target, 75, 300);
-        target = target / 360;
+        target = target / 360.0;
 
         pivotServo.setPosition(target);
     }

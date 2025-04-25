@@ -8,17 +8,21 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.teamcode.support.RunAction;
 
+//sigma
+//jack was here
+
+
 @Config
 public class Diffy extends SubsystemBase {
     private Servo leftDiffyServo, rightDiffyServo;
     private ServoStates currentState;
     private final ElapsedTime switchTimer = new ElapsedTime();
-    public enum ServoStates {
-        CENTER(0.58, 0.55),
+    public static enum ServoStates {
+        CENTER(0.50, 0.50),
         START(0.92, 0.885),
-        END(0.2, 0.18),
+        END(0.7, 0.3),
         SPECIMEN(0.68,0.67),
-        SUB(0.76, 0.78);
+        SUB(0.25, 0.75);
 
 
         private final double positionL, positionR;
@@ -40,7 +44,7 @@ public class Diffy extends SubsystemBase {
     public Diffy(HardwareMap h) {
         leftDiffyServo = h.get(Servo.class, "leftDiffyServo");
         rightDiffyServo = h.get(Servo.class, "rightDiffyServo");
-        currentState = ServoStates.START;
+        currentState = ServoStates.END;
         leftDiffyServo.setPosition(currentState.getPositionL());
         rightDiffyServo.setPosition(currentState.getPositionR());
 
@@ -61,7 +65,7 @@ public class Diffy extends SubsystemBase {
     public void startDiffy() {
         setPosition(ServoStates.START);
     }
-
+//hi
     public void endDiffy() {
         setPosition(ServoStates.END);
     }
@@ -102,7 +106,6 @@ public class Diffy extends SubsystemBase {
 
     public void setPosition(ServoStates state) {
         currentState = state;
-
         leftDiffyServo.setPosition(state.getPositionL());
         rightDiffyServo.setPosition(state.getPositionR());
     }
